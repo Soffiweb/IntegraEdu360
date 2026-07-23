@@ -3,6 +3,8 @@
 .env
 .env.backup
 .env.production
+.env.local
+.env.*.local
 .phpactor.json
 .phpunit.result.cache
 /.fleet
@@ -11,6 +13,7 @@
 /.phpunit.cache
 /.vscode
 /.zed
+/.vs
 /auth.json
 /node_modules
 /public/build
@@ -22,3 +25,10 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
+ehthumbs.db
+desktop.ini
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+.claude/settings.local.json
