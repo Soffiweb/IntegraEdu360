@@ -1,0 +1,158 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=DM+Mono:ital,wght@0,400;0,500;1,400&display=swap');
+
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+
+@theme {
+    --font-sans: 'Plus Jakarta Sans', system-ui, sans-serif;
+    --font-mono: 'DM Mono', ui-monospace, monospace;
+}
+
+/* ================================================================
+   Soffiweb Design System v1.0 — CSS Custom Properties
+   Ref: DESIGN.md + design/colors.md, typography.md, spacing.md
+================================================================ */
+
+:root {
+    /* ---- Rampa Navy (Primary) ---- */
+    --navy-50:  #eef1fb;
+    --navy-100: #ccd4f1;
+    --navy-200: #9aaae3;
+    --navy-300: #6880d4;
+    --navy-400: #3d5fc4;
+    --navy-500: #2a4aaa;
+    --navy-600: #1e3890;
+    --navy-700: #152b74;
+    --navy-800: #0e1f55;
+    --navy-900: #070f2e;
+
+    /* ---- Rampa Rosa Soffi (Accent) ---- */
+    --rosa-50:  #fdf0f4;
+    --rosa-100: #f7d0de;
+    --rosa-200: #edaac2;
+    --rosa-300: #e07fa4;
+    --rosa-400: #d05c88;
+    --rosa-500: #c4527a;
+    --rosa-600: #a03560;
+    --rosa-700: #7d1f46;
+    --rosa-800: #590e30;
+    --rosa-900: #36001b;
+
+    /* ---- Rampa Steel (Decorativo) ---- */
+    --steel-50:  #f0f4fb;
+    --steel-100: #d8e4f4;
+    --steel-200: #b8cee9;
+    --steel-300: #8fb3d9;
+    --steel-400: #6a97c5;
+    --steel-500: #4a7cc7;
+
+    /* ---- Superficies — Light Mode ---- */
+    --base-100:     #fdfdff;
+    --base-200:     #f7f9fe;
+    --base-300:     #eef1f8;
+    --base-content: #303237;
+    --muted:        #64748b;
+    --border:       #dde3f0;
+    --sidebar-bg:   #070f2e;
+
+    /* ---- Tokens semánticos — Light Mode ---- */
+    --color-primary:        #152b74;
+    --color-primary-hover:  #0e1f55;
+    --color-primary-light:  #eef1fb;
+    --color-accent:         #c4527a;
+    --color-accent-hover:   #a03560;
+
+    --color-success-bg:     #eaf3de;
+    --color-success-text:   #3b6d11;
+    --color-warning-bg:     #faeeda;
+    --color-warning-text:   #854f0b;
+    --color-error-bg:       #fcebeb;
+    --color-error-text:     #a32d2d;
+    --color-info-bg:        #eef1fb;
+    --color-info-text:      #152b74;
+
+    /* ---- Espaciado (base 4px) ---- */
+    --sp-xxs:     2px;
+    --sp-xs:      4px;
+    --sp-sm:      8px;
+    --sp-md:      12px;
+    --sp-base:    16px;
+    --sp-lg:      24px;
+    --sp-xl:      32px;
+    --sp-xxl:     48px;
+    --sp-section: 64px;
+
+    /* ---- Bordes redondeados ---- */
+    --r-xs:   2px;
+    --r-sm:   4px;
+    --r-md:   6px;
+    --r-lg:   10px;
+    --r-xl:   14px;
+    --r-2xl:  20px;
+    --r-full: 9999px;
+
+    /* ---- Sombras (tintadas en navy) ---- */
+    --shadow-xs:    0 1px 2px rgba(21,43,116,0.06);
+    --shadow-sm:    0 1px 3px rgba(21,43,116,0.08), 0 1px 2px rgba(21,43,116,0.06);
+    --shadow-md:    0 4px 6px rgba(21,43,116,0.07), 0 2px 4px rgba(21,43,116,0.06);
+    --shadow-lg:    0 10px 15px rgba(21,43,116,0.08), 0 4px 6px rgba(21,43,116,0.05);
+    --shadow-focus: 0 0 0 3px rgba(61,95,196,0.18);
+
+    /* ---- Alturas de componentes interactivos ---- */
+    --h-xs:      24px;
+    --h-sm:      32px;
+    --h-md:      36px;
+    --h-lg:      48px;
+    --h-topbar:  60px;
+
+    /* ---- Sidebar ---- */
+    --w-sidebar:           220px;
+    --w-sidebar-collapsed: 56px;
+}
+
+/* ---- Dark Mode overrides ---- */
+.dark,
+[data-theme="dark"] {
+    --base-100:     #1e2535;
+    --base-200:     #151c2c;
+    --base-300:     #252f42;
+    --base-content: #e2e8f4;
+    --muted:        #7a8aaa;
+    --border:       #2e3d58;
+    --sidebar-bg:   #0d1424;
+
+    --color-primary:        #6880d4;
+    --color-primary-hover:  #9aaae3;
+    --color-primary-light:  #0e1f55;
+    --color-accent:         #d05c88;
+    --color-accent-hover:   #e07fa4;
+
+    --color-success-bg:     #0d2410;
+    --color-success-text:   #86efac;
+    --color-warning-bg:     #2a1f05;
+    --color-warning-text:   #fcd34d;
+    --color-error-bg:       #2a0a0a;
+    --color-error-text:     #fca5a5;
+    --color-info-bg:        #0e1f55;
+    --color-info-text:      #93c5fd;
+
+    /* En dark mode las sombras usan negro puro (fondos oscuros absorben el tinte navy) */
+    --shadow-xs:    0 1px 2px rgba(0,0,0,0.3);
+    --shadow-sm:    0 1px 3px rgba(0,0,0,0.4);
+    --shadow-md:    0 4px 6px rgba(0,0,0,0.4);
+    --shadow-lg:    0 10px 15px rgba(0,0,0,0.4);
+}
+
+/* ================================================================
+   Animaciones — prefers-reduced-motion
+================================================================ */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+    }
+}
