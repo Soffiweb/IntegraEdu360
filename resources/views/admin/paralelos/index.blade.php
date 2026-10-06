@@ -118,11 +118,11 @@
                                     <td><span class="badge badge-{{ strtolower($paralelo->estado) }}">{{ $estados[$paralelo->estado] ?? $paralelo->estado }}</span></td>
                                     <td>
                                         <div class="actions">
-                                            <a class="btn mini-btn" href="{{ route('admin.paralelos.index', array_filter(['edit' => $paralelo->id, 'search' => request('search'), 'institucion' => request('institucion'), 'curso_id' => request('curso_id'), 'estado' => request('estado')])) }}">Editar</a>
+                                            <a class="btn mini-btn record-action" href="{{ route('admin.paralelos.index', array_filter(['edit' => $paralelo->id, 'search' => request('search'), 'institucion' => request('institucion'), 'curso_id' => request('curso_id'), 'estado' => request('estado')])) }}" aria-label="Editar registro" title="Editar"><i class="fa-solid fa-pen-to-square" aria-hidden="true"></i></a>
                                             <form method="POST" action="{{ route('admin.paralelos.destroy', $paralelo) }}" onsubmit="return confirm('Desea eliminar este paralelo?');">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button class="btn btn-danger mini-btn" type="submit">Eliminar</button>
+                                                <button class="btn btn-danger mini-btn record-action" type="submit" aria-label="Eliminar registro" title="Eliminar"><i class="fa-solid fa-trash-can" aria-hidden="true"></i></button>
                                             </form>
                                         </div>
                                     </td>

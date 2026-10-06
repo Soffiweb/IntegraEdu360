@@ -120,11 +120,11 @@
                             <td>{{ $usuario->ultimo_acceso?->format('Y-m-d H:i') ?: 'Sin registro' }}</td>
                             <td>
                                 <div class="actions">
-                                    <a class="btn mini-btn" href="{{ route('admin.usuarios.index', array_filter(['edit' => $usuario->id, 'search' => request('search'), 'institucion' => request('institucion'), 'rol' => request('rol'), 'estado' => request('estado')])) }}">Editar</a>
+                                    <a class="btn mini-btn record-action" href="{{ route('admin.usuarios.index', array_filter(['edit' => $usuario->id, 'search' => request('search'), 'institucion' => request('institucion'), 'rol' => request('rol'), 'estado' => request('estado')])) }}" aria-label="Editar registro" title="Editar"><i class="fa-solid fa-pen-to-square" aria-hidden="true"></i></a>
                                     <form method="POST" action="{{ route('admin.usuarios.destroy', $usuario) }}" onsubmit="return confirm('Desea eliminar este usuario de la tabla usuarios?');">
                                         @csrf
                                         @method('DELETE')
-                                        <button class="btn btn-danger mini-btn" type="submit">Eliminar</button>
+                                        <button class="btn btn-danger mini-btn record-action" type="submit" aria-label="Eliminar registro" title="Eliminar"><i class="fa-solid fa-trash-can" aria-hidden="true"></i></button>
                                     </form>
                                 </div>
                             </td>

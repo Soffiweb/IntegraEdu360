@@ -103,11 +103,11 @@
                             <td><span class="badge badge-{{ strtolower($periodo->estado) }}">{{ $estados[$periodo->estado] ?? $periodo->estado }}</span></td>
                             <td>
                                 <div class="actions">
-                                    <a class="btn" href="{{ route('admin.periodos.index', array_filter(['edit' => $periodo->id, 'search' => request('search'), 'institucion' => request('institucion'), 'estado' => request('estado')])) }}">Editar</a>
+                                    <a class="btn record-action" href="{{ route('admin.periodos.index', array_filter(['edit' => $periodo->id, 'search' => request('search'), 'institucion' => request('institucion'), 'estado' => request('estado')])) }}" aria-label="Editar registro" title="Editar"><i class="fa-solid fa-pen-to-square" aria-hidden="true"></i></a>
                                     <form method="POST" action="{{ route('admin.periodos.destroy', $periodo) }}" onsubmit="return confirm('Desea eliminar este periodo academico?');">
                                         @csrf
                                         @method('DELETE')
-                                        <button class="btn btn-danger" type="submit">Eliminar</button>
+                                        <button class="btn btn-danger record-action" type="submit" aria-label="Eliminar registro" title="Eliminar"><i class="fa-solid fa-trash-can" aria-hidden="true"></i></button>
                                     </form>
                                 </div>
                             </td>

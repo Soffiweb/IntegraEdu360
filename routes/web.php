@@ -1780,6 +1780,10 @@ Route::get('/acceso/{role}', function (string $role) {
     ]);
 })->name('roles.access');
 
+Route::get('/dashboard/admin/resumen', [\App\Http\Controllers\Admin\ResumenController::class, 'index'])
+    ->middleware('role.session:admin')
+    ->name('admin.resumen.index');
+
 Route::get('/dashboard/{role}', function (string $role) {
     $roles = integraEduRoles();
     $dashboards = integraEduDashboards();
@@ -1801,43 +1805,7 @@ Route::get('/dashboard/{role}', function (string $role) {
     }
 
     if ($role === 'admin') {
-        $sessionUser = request()->session()->get('auth_user', []);
-        $institucionActiva = null;
-        $institucionId = $sessionUser['institucion_id'] ?? null;
-
-        if ($institucionId) {
-            $institucionActiva = Institucion::find($institucionId);
-        } elseif ($usuarioId = $sessionUser['id'] ?? null) {
-            $usuario = Usuario::find($usuarioId);
-
-            if ($usuario?->institucion_id) {
-                $institucionActiva = Institucion::find($usuario->institucion_id);
-            }
-        }
-
-        if ($institucionActiva?->nombre) {
-            $dashboards['admin']['greeting'] = $institucionActiva->nombre;
-        }
-
-        $dashboards['admin']['actions'] = array_map(function (array $action) {
-            if (($action['slug'] ?? null) !== 'configuracion') {
-                return $action;
-            }
-
-            $action['label'] = 'Datos institucionales';
-            $action['description'] = 'Editar la informacion principal de la institucion asignada.';
-            $action['slug'] = 'datos-institucionales';
-
-            return $action;
-        }, $dashboards['admin']['actions']);
-    }
-
-    if ($role === 'admin') {
-        return view('admin.dashboard', [
-            'roleKey' => $role,
-            'role' => $roles[$role],
-            'dashboard' => $dashboards[$role],
-        ]);
+        return app(\App\Http\Controllers\Admin\ResumenController::class)->index(request(), app(\App\Services\Admin\ResumenInstitucional::class));
     }
 
     if ($role === 'inspector') {

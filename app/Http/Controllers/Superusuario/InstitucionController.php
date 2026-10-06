@@ -5,8 +5,11 @@ namespace App\Http\Controllers\Superusuario;
 use App\Http\Controllers\Controller;
 use App\Models\Distrito;
 use App\Models\Institucion;
+use App\Models\Rol;
+use App\Models\Usuario;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 
 class InstitucionController extends Controller
@@ -66,11 +69,22 @@ class InstitucionController extends Controller
     {
         $validated = $this->validatedData($request);
 
-        Institucion::create($validated);
+        $passwordHash = Hash::make($validated['codigo_amie']);
+        DB::transaction(function () use ($validated, $passwordHash) {
+            $institucion = Institucion::create($validated);
+            $rol = Rol::firstOrCreate(['codigo' => 'ADMIN'], ['nombre' => 'Administrador']);
+            $usuario = Usuario::create([
+                'username' => $institucion->codigo_amie,
+                'password_hash' => $passwordHash,
+                'institucion_id' => $institucion->id,
+                'estado' => 'ACTIVO',
+            ]);
+            $usuario->roles()->attach($rol->id, ['institucion_id' => $institucion->id]);
+        });
 
         return redirect()
             ->route('superusuario.instituciones.index')
-            ->with('status', 'Institucion creada correctamente.');
+            ->with('status', 'Institución y cuenta de administrador creadas correctamente. El usuario y la contraseña inicial corresponden al código AMIE.');
     }
 
     public function update(Request $request, Institucion $institucion)
@@ -95,9 +109,16 @@ class InstitucionController extends Controller
 
     private function validatedData(Request $request, ?Institucion $institucion = null): array
     {
+        if (is_string($request->input('codigo_amie'))) {
+            $request->merge(['codigo_amie' => strtoupper(trim($request->input('codigo_amie')))]);
+        }
+        $codigoRules = ['required', 'string', 'max:20', Rule::unique('instituciones', 'codigo_amie')->ignore($institucion?->id)];
+        if (! $institucion) {
+            $codigoRules[] = Rule::unique('usuarios', 'username');
+        }
         $validated = $request->validate([
             'distrito_id' => ['nullable', 'integer', Rule::exists('distritos', 'id')],
-            'codigo_amie' => ['required', 'string', 'max:20', Rule::unique('instituciones', 'codigo_amie')->ignore($institucion?->id)],
+            'codigo_amie' => $codigoRules,
             'nombre' => ['required', 'string', 'max:255'],
             'sostenimiento_id' => ['required', 'integer', Rule::exists('cat_sostenimiento', 'id')],
             'regimen_id' => ['required', 'integer', Rule::exists('cat_regimen_escolar', 'id')],

@@ -493,6 +493,7 @@
         }
 
         .section-title { margin-bottom: var(--sp-base, 16px); }
+        .toolbar { margin-bottom: var(--sp-lg, 24px); }
 
         .section-title h2 {
             margin: 0;
@@ -578,9 +579,18 @@
         .errors ul { margin: 0; padding-left: 18px; }
 
         /* ---- Tablas ---- */
-        table { width: 100%; border-collapse: collapse; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; }
 
-        thead { background: var(--navy-800, #0e1f55); }
+        thead { background: transparent; }
+
+        thead th { background: var(--navy-800, #0e1f55); color: var(--btn-text, #fdfdff); }
+        thead tr:first-child th:first-child { border-top-left-radius: 14px; }
+        thead tr:first-child th:last-child { border-top-right-radius: 14px; }
+        thead tr:last-child th:first-child { border-bottom-left-radius: 14px; }
+        thead tr:last-child th:last-child { border-bottom-right-radius: 14px; }
+        .btn.record-action { width: 36px; min-width: 36px; height: 36px; min-height: 36px; padding: 0; flex: 0 0 36px; }
+        .record-action i { font-size: 14px; }
+        .record-action:focus-visible { outline: 2px solid var(--navy-700); outline-offset: 3px; }
 
         th {
             padding: 11px 14px;
@@ -810,6 +820,11 @@
             </div>
 
             <nav class="sidebar-nav">
+                <a class="nav-item {{ $activeAdminNav === 'resumen' ? 'active' : '' }}" href="{{ route('admin.resumen.index') }}" @if($activeAdminNav === 'resumen') aria-current="page" @endif>
+                    <i class="fa-solid fa-chart-pie" aria-hidden="true"></i>
+                    <span>Resumen Ejecutivo</span>
+                    <small>Inicio</small>
+                </a>
                 <a class="nav-item {{ $activeAdminNav === 'institucion' ? 'active' : '' }}" href="{{ route('admin.institucion.index') }}">
                     <i class="fa-solid fa-building"></i>
                     <span>Datos institucionales</span>
