@@ -1,0 +1,49 @@
+.zonas-content { color: var(--base-content, #303237); }
+.zonas-content h1 { margin: 0; font-size: 24px; }
+.zonas-content p { margin: 8px 0 24px; color: var(--bc2, #6b7280); }
+.zonas-content .sw-table-wrap { overflow-x: auto; border: 1px solid var(--surface, #edf1fb); border-radius: .5rem; }
+.zonas-content .sw-table { width: 100%; border-collapse: separate; border-spacing: 0; text-align: left; }
+.zonas-content caption { padding: 12px 16px; text-align: left; font-weight: 700; }
+.zonas-content th { background: var(--th-bg, #e8eef8); color: var(--p, #28449a); border-bottom: 2px solid var(--p, #28449a); }
+.zonas-content th, .zonas-content td { padding: 14px 16px; }
+.zonas-content td { border-bottom: 1px solid var(--surface, #edf1fb); font-variant-numeric: tabular-nums; }
+
+.zona-form { display: grid; gap: 8px; margin-bottom: 24px; padding: 20px; background: var(--surface, #edf1fb); border-radius: .5rem; }
+.zona-form h2 { margin: 0 0 8px; font-size: 18px; }
+.zona-form input, .zona-form textarea { width: 100%; padding: 10px; border: 1px solid var(--secondary, #81a2cf); border-radius: .25rem; font: inherit; }
+.zona-form-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.zona-form [role="alert"] { color: var(--error, #E11D48); }
+
+.zonas-content .sw-btn { display: inline-flex; align-items: center; justify-content: center; padding: 9px 14px; border: 1px solid var(--p, #28449a); border-radius: .5rem; font: inherit; text-decoration: none; cursor: pointer; min-height: 40px; white-space: nowrap; }
+.zonas-content .sw-btn-primary { background: var(--p, #28449a); color: var(--btn-text, #fdfdff); }
+.zonas-content .sw-btn-ghost { background: transparent; color: var(--p, #28449a); }
+.distritos-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.distritos-filter { display: flex; align-items: flex-end; flex-wrap: wrap; gap: 12px; margin-bottom: 24px; }
+.distritos-filter label { display: block; margin-bottom: 6px; }
+.distritos-filter select { padding: 10px; border: 1px solid var(--secondary, #81a2cf); border-radius: .25rem; font: inherit; min-width: 200px; max-width: 100%; }
+.distritos-pagination { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; margin: 16px 0; }
+.distritos-summary { margin-top: 24px; padding: 16px 20px; background: var(--surface, #edf1fb); border-radius: .5rem; }
+.distritos-summary h2 { margin: 0; font-size: 16px; }
+.distritos-summary p { margin-bottom: 8px; }
+.distritos-summary ul { display: flex; flex-wrap: wrap; gap: 8px 28px; padding-left: 18px; margin-bottom: 0; }
+.zonas-content a:focus-visible, .zonas-content button:focus-visible, .zonas-content input:focus-visible, .zonas-content textarea:focus-visible, .zonas-content select:focus-visible { outline: 2px solid var(--secondary, #81a2cf); outline-offset: 3px; }
+
+/* Los catálogos comparten el panel y los controles de instituciones. */
+.catalogo-content .hero h1 { color: var(--white); }
+.catalogo-content .hero p { margin: 0; color: rgba(255, 255, 255, .8); }
+.catalogo-content .sw-table-wrap { border: 0; border-radius: 0; overflow-x: auto; }
+.catalogo-content .sw-table caption { color: var(--slate-500); padding: 0 12px 14px; font-weight: 500; }
+.catalogo-content .sw-table th { background: var(--navy-950); color: var(--white); border-bottom: 1px solid var(--navy-900); }
+.catalogo-content .sw-table td { border-bottom: 1px solid var(--slate-100); }
+.catalogo-content .distritos-filter { margin-bottom: 0; align-items: flex-end; }
+.catalogo-content .distritos-filter select { min-height: 44px; padding: 0 14px; border: 1px solid var(--slate-200); border-radius: 14px; color: var(--slate-700); background: var(--white); }
+.catalogo-content .zona-form { background: var(--slate-50); border: 1px solid var(--slate-200); border-radius: 20px; }
+.catalogo-content .zona-form input, .catalogo-content .zona-form textarea { border-color: var(--slate-200); border-radius: 14px; }
+.catalogo-content .distritos-pagination { justify-content: flex-end; color: var(--slate-500); }
+.catalogo-content .distritos-summary { border-radius: 20px; background: var(--slate-50); border: 1px solid var(--slate-200); }
+.catalogo-content .distritos-empty { margin: 0; padding: 24px 0; color: var(--slate-500); }
+@media (max-width: 720px) {
+    .catalogo-content .panel { padding: 18px; }
+    .catalogo-content .section-title { flex-wrap: wrap; }
+    .catalogo-content .distritos-filter > div, .catalogo-content .distritos-filter select { width: 100%; }
+}

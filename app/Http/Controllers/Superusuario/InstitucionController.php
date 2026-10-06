@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Superusuario;
 
 use App\Http\Controllers\Controller;
+use App\Models\Distrito;
 use App\Models\Institucion;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -12,7 +13,7 @@ class InstitucionController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Institucion::query();
+        $query = Institucion::query()->with('distrito.zona');
 
         if ($search = trim((string) $request->string('search'))) {
             $query->where(function ($builder) use ($search) {
@@ -42,8 +43,13 @@ class InstitucionController extends Controller
             $institucionEditando = Institucion::findOrFail((int) $request->input('edit'));
         }
 
-        return view('superusuario.instituciones.index', [
+        return view('dashboard-role', [
+            'roleKey' => 'superusuario',
+            'role' => integraEduRoles()['superusuario'],
+            'dashboard' => integraEduDashboards()['superusuario'],
+            'dashboardSection' => 'instituciones',
             'instituciones' => $instituciones,
+            'distritos' => Distrito::query()->with('zona')->orderBy('codigo')->get(),
             'institucionEditando' => $institucionEditando,
             'estados' => $this->estados(),
             'sostenimientos' => $this->sostenimientos(),
@@ -90,6 +96,7 @@ class InstitucionController extends Controller
     private function validatedData(Request $request, ?Institucion $institucion = null): array
     {
         $validated = $request->validate([
+            'distrito_id' => ['nullable', 'integer', Rule::exists('distritos', 'id')],
             'codigo_amie' => ['required', 'string', 'max:20', Rule::unique('instituciones', 'codigo_amie')->ignore($institucion?->id)],
             'nombre' => ['required', 'string', 'max:255'],
             'sostenimiento_id' => ['required', 'integer', Rule::exists('cat_sostenimiento', 'id')],

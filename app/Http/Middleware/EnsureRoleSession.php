@@ -10,7 +10,7 @@ class EnsureRoleSession
 {
     public function handle(Request $request, Closure $next, string ...$allowedRoles): Response
     {
-        $sessionUser = $request->session()->get('auth_user');
+        $sessionUser = integraEduSessionUser($request);
 
         if (! is_array($sessionUser)) {
             $targetRole = $allowedRoles[0] ?? null;

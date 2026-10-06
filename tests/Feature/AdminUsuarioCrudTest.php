@@ -2,10 +2,10 @@
 
 namespace Tests\Feature;
 
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
 use Tests\TestCase;
 
 class AdminUsuarioCrudTest extends TestCase
@@ -26,19 +26,6 @@ class AdminUsuarioCrudTest extends TestCase
             $table->string('celular')->nullable();
             $table->string('email')->nullable();
             $table->timestamps();
-        });
-
-        Schema::create('roles', function (Blueprint $table) {
-            $table->smallIncrements('id');
-            $table->string('codigo');
-            $table->string('nombre');
-        });
-
-        Schema::create('usuario_rol', function (Blueprint $table) {
-            $table->id();
-            $table->unsignedBigInteger('usuario_id');
-            $table->unsignedSmallInteger('rol_id');
-            $table->unsignedBigInteger('institucion_id')->nullable();
         });
 
         DB::table('personas')->insert([
@@ -68,6 +55,15 @@ class AdminUsuarioCrudTest extends TestCase
                 'updated_at' => now(),
             ]);
         }
+
+        DB::table('usuarios')->insert([
+            'id' => 999,
+            'username' => 'admin.test',
+            'password_hash' => 'test',
+            'estado' => 'ACTIVO',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
 
         $this->withSession([
             'auth_user' => [

@@ -1,0 +1,17 @@
+{
+  "consulta": "2026-10-04",
+  "periodo": "2025-2026 Inicio",
+  "registro_url": "https://educacion.gob.ec/wp-content/uploads/downloads/2026/04/1Registro-Administrativo-Historico_2009-202X-Inicio.xlsx",
+  "cruce_url": "https://educacion.gob.ec/visualizador-de-transparencia/",
+  "cruce_actualizacion": "2026-09-17T14:13:17.393Z",
+  "instituciones": 16215,
+  "con_distrito": 16182,
+  "pendientes": 33,
+  "zonas_actualizadas": 30,
+  "sha256": {
+    "instituciones-2025-2026.csv": "92b6a8644e03283aff3b6724966d487087939bb46fe60f6871fe297705f8521b",
+    "cruce-instituciones-distritos-2026.json.gz": "2e77116d514255f6ea2775b41ebdbbbcf566268ee491e8754e9ef8c374ad5914",
+    "cruce-instituciones-complemento-2026.json.gz": "60df20d3ff1f0d674bcb77b5cf39f4aac291174e55e0d5d8cc64e0519a6be50a"
+  },
+  "registro_sha256": "2a7f6e234a82b0df1166215348b492d7cdebc09f0522dc2944f718b5dedbd47b"
+}

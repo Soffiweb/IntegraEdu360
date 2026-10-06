@@ -3,12 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
     <title>Dashboard {{ $role['name'] }} — IntegraEdu360</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
     @if(file_exists(public_path('hot')) || file_exists(public_path('build/manifest.json')))
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @endif
+    @if (in_array($dashboardSection ?? null, ['zonas', 'distritos', 'roles', 'usuarios', 'resumen'], true))
+        <link href="{{ asset('css/zonas.css') }}" rel="stylesheet">
+    @endif
+    @if (in_array($dashboardSection ?? null, ['instituciones', 'zonas', 'distritos', 'roles', 'usuarios', 'resumen'], true))
+        <link href="{{ asset('css/instituciones.css') }}" rel="stylesheet">
     @endif
     <style>
         /* ============================================================
@@ -801,7 +808,7 @@
                             <span>Resumen ejecutivo</span>
                             <small>Hoy</small>
                         </a>
-                        @if (in_array($roleKey, ['admin', 'superusuario'], true))
+                        @if ($roleKey === 'admin')
                             <a class="nav-item {{ request()->routeIs('admin.usuarios.*') ? 'active' : '' }}"
                                href="{{ route('admin.usuarios.index') }}">
                                 <span>Gestión de usuarios</span>
@@ -809,17 +816,31 @@
                             </a>
                         @endif
                         @if ($roleKey === 'superusuario')
+                            <a class="nav-item {{ request()->routeIs('superusuario.zonas.*') ? 'active' : '' }}" href="{{ route('superusuario.zonas.index') }}" @if(request()->routeIs('superusuario.zonas.*')) aria-current="page" @endif>
+                                <span>Zonas educativas</span>
+                                <small>Catálogo</small>
+                            </a>
+                            <a class="nav-item {{ request()->routeIs('superusuario.distritos.*') ? 'active' : '' }}"
+                               href="{{ route('superusuario.distritos.index') }}" @if(request()->routeIs('superusuario.distritos.*')) aria-current="page" @endif>
+                                <span>Distritos Educativos</span>
+                                <small>Catálogo</small>
+                            </a>
                             <a class="nav-item {{ request()->routeIs('superusuario.instituciones.*') ? 'active' : '' }}"
-                               href="{{ route('superusuario.instituciones.index') }}">
+                               href="{{ route('superusuario.instituciones.index') }}" @if(request()->routeIs('superusuario.instituciones.*')) aria-current="page" @endif>
                                 <span>Instituciones</span>
                                 <small>CRUD</small>
                             </a>
+                            <a class="nav-item {{ request()->routeIs('superusuario.roles.*') ? 'active' : '' }}"
+                               href="{{ route('superusuario.roles.index') }}" @if(request()->routeIs('superusuario.roles.*')) aria-current="page" @endif>
+                                <span>Roles de Usuario</span>
+                                <small>Catálogo</small>
+                            </a>
+                            <a class="nav-item {{ request()->routeIs('superusuario.usuarios.*') ? 'active' : '' }}"
+                               href="{{ route('superusuario.usuarios.index') }}" @if(request()->routeIs('superusuario.usuarios.*')) aria-current="page" @endif>
+                                <span>Gestión de Usuarios</span>
+                                <small>Administradores</small>
+                            </a>
                         @endif
-                        <a class="nav-item {{ request()->routeIs('roles.access') ? 'active' : '' }}"
-                           href="{{ route('roles.access', $roleKey) }}">
-                            <span>Perfil del rol</span>
-                            <small>Vista</small>
-                        </a>
                         <a class="nav-item" href="{{ route('auth.form') }}">
                             <span>Cambiar acceso</span>
                             <small>Menú</small>
@@ -829,7 +850,7 @@
             </nav>
 
             {{-- Panel de alertas en sidebar (solo non-admin) --}}
-            @if ($roleKey !== 'admin')
+            @if (! in_array($roleKey, ['admin', 'superusuario'], true))
                 <div class="sidebar-alerts">
                     <div class="sidebar-alerts-header">Alertas clave</div>
                     @foreach ($dashboard['alerts'] as $alert)
@@ -846,6 +867,19 @@
         {{-- ===================== MAIN ===================== --}}
         <main class="main">
 
+            @if (($dashboardSection ?? null) === 'resumen')
+                @include('superusuario.resumen.index')
+            @elseif (($dashboardSection ?? null) === 'usuarios')
+                @include('superusuario.usuarios.index')
+            @elseif (($dashboardSection ?? null) === 'roles')
+                @include('superusuario.roles.index')
+            @elseif (($dashboardSection ?? null) === 'zonas')
+                @include('superusuario.zonas.index')
+            @elseif (($dashboardSection ?? null) === 'distritos')
+                @include('superusuario.distritos.index')
+            @elseif (($dashboardSection ?? null) === 'instituciones')
+                @include('superusuario.instituciones.index')
+            @else
             {{-- Cabecera de página --}}
             <header class="page-header">
                 <div class="page-header-copy">
@@ -955,6 +989,8 @@
                                         </div>
                                         @if ($roleKey === 'superusuario' && ($action['slug'] ?? null) === 'instituciones')
                                             <a class="action-link" href="{{ route('superusuario.instituciones.index') }}">Abrir</a>
+                                        @elseif ($roleKey === 'superusuario' && ($action['slug'] ?? null) === 'zonas')
+                                            <a class="action-link" href="{{ route('superusuario.zonas.index') }}">Abrir</a>
                                         @elseif ($roleKey === 'admin' && ($action['slug'] ?? null) === 'datos-institucionales')
                                             <a class="action-link" href="{{ route('admin.institucion.index') }}">Abrir</a>
                                         @elseif ($roleKey === 'admin' && ($action['slug'] ?? null) === 'periodos')
@@ -1002,6 +1038,7 @@
                 </div>
             </section>
 
+            @endif
         </main>
     </div>
 </body>

@@ -1,0 +1,19 @@
+{
+  "titulo": "Acuerdo MINEDUC-MINEDUC-2025-00012-A, artículo 1",
+  "url": "https://educacion.gob.ec/wp-content/uploads/downloads/2025/03/MINEDUC-MINEDUC-2025-00012-A.pdf",
+  "fecha_documento": "2025-03-18",
+  "fecha_consulta": "2026-10-04",
+  "sha256_pdf": "13a557dd0bed67e576c666420927ad43eeb9703b9ef708378d71c06eb976b938",
+  "total": 140,
+  "totales_por_zona": {
+    "1": 16,
+    "2": 8,
+    "3": 19,
+    "4": 15,
+    "5": 25,
+    "6": 17,
+    "7": 19,
+    "8": 12,
+    "9": 9
+  }
+}

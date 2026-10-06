@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
-use App\Models\Usuario;
 use App\Models\User;
+use App\Models\Usuario;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -16,6 +16,11 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        $this->call(RolSeeder::class);
+        $this->call(ZonaSeeder::class);
+        $this->call(DistritoSeeder::class);
+        $this->call(InstitucionCatalogosSeeder::class);
+
         if (User::count() === 0) {
             User::factory()->create([
                 'name' => 'Test User',
