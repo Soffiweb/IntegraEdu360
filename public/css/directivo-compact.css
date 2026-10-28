@@ -1,0 +1,99 @@
+.directivo-panel .page-header {
+    margin-bottom: 12px;
+    gap: 8px;
+}
+
+.directivo-panel .page-header h1 {
+    font-size: 20px;
+    margin-bottom: 4px;
+}
+
+.directivo-panel .page-header p {
+    margin: 0;
+    font-size: 12px;
+}
+
+.directivo-panel .role-hero {
+    padding: 12px 16px;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.directivo-panel .role-hero-info .eyebrow,
+.directivo-panel .focus-card .focus-label {
+    padding: 2px 6px;
+    margin-bottom: 4px;
+}
+
+.directivo-panel .role-hero-info h2 {
+    font-size: 16px;
+    margin-bottom: 4px;
+}
+
+.directivo-panel .role-hero-info p,
+.directivo-panel .focus-card p {
+    font-size: 12px;
+    line-height: 1.3;
+}
+
+.directivo-panel .focus-card {
+    padding: 8px 12px;
+}
+
+.directivo-panel .kpi-row {
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.directivo-panel .kpi-card {
+    box-sizing: border-box;
+    min-height: 72px;
+    padding: 8px 12px 8px 14px;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 4px 8px;
+}
+
+.directivo-panel .kpi-value {
+    font-size: 22px;
+    margin-bottom: 0;
+}
+
+.directivo-panel .kpi-trend {
+    grid-column: 1 / -1;
+    justify-self: start;
+    margin-top: 0;
+    padding: 2px 6px;
+}
+
+.directivo-panel .hero {
+    box-sizing: border-box;
+    min-height: 50px;
+    padding: 12px 16px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+}
+
+.directivo-panel .hero h2 {
+    margin: 0;
+    font-size: 18px;
+    line-height: 1.2;
+}
+
+.directivo-panel .stats {
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.directivo-panel .stats .card {
+    box-sizing: border-box;
+    min-height: 80px;
+    padding: 10px 10px 10px 11px;
+}
+
+.directivo-panel .metric {
+    font-size: 1.5rem;
+    margin-bottom: 3px;
+}

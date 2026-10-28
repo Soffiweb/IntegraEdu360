@@ -6,7 +6,6 @@ use App\Models\Institucion;
 use App\Models\Persona;
 use App\Models\Rol;
 use App\Models\Usuario;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
@@ -85,19 +84,6 @@ class SuperusuarioUsuarioTest extends TestCase
         $this->put(route('superusuario.usuarios.update', $usuario), ['username' => 'cambiado'])->assertNotFound();
         $this->assertSame('ACTIVO', $usuario->fresh()->estado);
         $this->assertSame('otro', $usuario->fresh()->username);
-    }
-
-    protected function setUp(): void
-    {
-        parent::setUp();
-        Schema::create('personas', function (Blueprint $table) {
-            $table->id();
-            $table->string('primer_nombre');
-            $table->string('segundo_nombre')->nullable();
-            $table->string('primer_apellido');
-            $table->string('segundo_apellido')->nullable();
-            $table->timestamps();
-        });
     }
 
     public function test_results_are_paginated_by_twenty_and_keep_filters(): void

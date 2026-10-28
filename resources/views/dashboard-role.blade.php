@@ -17,6 +17,9 @@
     @if (in_array($dashboardSection ?? null, ['instituciones', 'zonas', 'distritos', 'roles', 'usuarios', 'resumen'], true))
         <link href="{{ asset('css/instituciones.css') }}" rel="stylesheet">
     @endif
+    @if (in_array($dashboardSection ?? null, ['distributivo-personal', 'horario-personal', 'estudiantes-curso', 'actualizar-datos', 'asistencia'], true))
+        <link href="{{ asset('css/distributivo-personal.css') }}" rel="stylesheet">
+    @endif
     <style>
         /* ============================================================
            Dashboard — estilos específicos
@@ -713,8 +716,11 @@
             .page-header-actions { width: 100%; }
         }
     </style>
+    @if ($roleKey === 'directivo')
+        <link rel="stylesheet" href="{{ asset('css/directivo-compact.css') }}?v={{ filemtime(public_path('css/directivo-compact.css')) }}">
+    @endif
 </head>
-<body>
+<body class="{{ $roleKey === 'directivo' ? 'directivo-panel' : '' }}">
     @php
         $roleModules = collect(integraEduModules()[$roleKey] ?? [])->keys()->all();
     @endphp
@@ -815,6 +821,38 @@
                                 <small>Sistema</small>
                             </a>
                         @endif
+                        @if ($roleKey === 'docente')
+                            <a class="nav-item {{ request()->routeIs('docente.datos.*') ? 'active' : '' }}"
+                               href="{{ route('docente.datos.edit') }}" @if(request()->routeIs('docente.datos.*')) aria-current="page" @endif>
+                                <span>Actualizar datos</span>
+                            </a>
+                            <a class="nav-item {{ request()->routeIs('docente.distributivo.*') ? 'active' : '' }}"
+                               href="{{ route('docente.distributivo.index') }}" @if(request()->routeIs('docente.distributivo.*')) aria-current="page" @endif>
+                                <span>Distributivo Personal</span>
+                            </a>
+                            <a class="nav-item {{ request()->routeIs('docente.horario.*') ? 'active' : '' }}"
+                               href="{{ route('docente.horario.index') }}" @if(request()->routeIs('docente.horario.*')) aria-current="page" @endif>
+                                <span>Horario Personal</span>
+                            </a>
+                            <a class="nav-item {{ request()->routeIs('docente.asistencia.*') ? 'active' : '' }}"
+                               href="{{ route('docente.asistencia.index') }}" @if(request()->routeIs('docente.asistencia.*')) aria-current="page" @endif>
+                                <span>Registro de asistencia</span>
+                            </a>
+                            <a class="nav-item {{ request()->routeIs('docente.estudiantes.*') ? 'active' : '' }}"
+                               href="{{ route('docente.estudiantes.index') }}" @if(request()->routeIs('docente.estudiantes.*')) aria-current="page" @endif>
+                                <span>Estudiantes por curso</span>
+                            </a>
+                        @endif
+                        @if ($roleKey === 'directivo')
+                            <a class="nav-item" href="{{ route('directivo.agenda.index') }}">
+                                <span>Agenda Institucional</span>
+                                <small>Eventos</small>
+                            </a>
+                            <a class="nav-item" href="{{ route('directivo.asignaciones.index') }}">
+                                <span>Asignaciones docentes</span>
+                                <small>Horas y comisiones</small>
+                            </a>
+                        @endif
                         @if ($roleKey === 'superusuario')
                             <a class="nav-item {{ request()->routeIs('superusuario.zonas.*') ? 'active' : '' }}" href="{{ route('superusuario.zonas.index') }}" @if(request()->routeIs('superusuario.zonas.*')) aria-current="page" @endif>
                                 <span>Zonas educativas</span>
@@ -867,7 +905,17 @@
         {{-- ===================== MAIN ===================== --}}
         <main class="main">
 
-            @if (($dashboardSection ?? null) === 'resumen')
+            @if (($dashboardSection ?? null) === 'asistencia')
+                @include('docente.asistencia')
+            @elseif (($dashboardSection ?? null) === 'actualizar-datos')
+                @include('docente.actualizar-datos')
+            @elseif (($dashboardSection ?? null) === 'estudiantes-curso')
+                @include('docente.estudiantes-curso')
+            @elseif (($dashboardSection ?? null) === 'horario-personal')
+                @include('docente.horario-personal')
+            @elseif (($dashboardSection ?? null) === 'distributivo-personal')
+                @include('docente.distributivo-personal')
+            @elseif (($dashboardSection ?? null) === 'resumen')
                 @include('superusuario.resumen.index')
             @elseif (($dashboardSection ?? null) === 'usuarios')
                 @include('superusuario.usuarios.index')
@@ -995,6 +1043,10 @@
                                             <a class="action-link" href="{{ route('admin.institucion.index') }}">Abrir</a>
                                         @elseif ($roleKey === 'admin' && ($action['slug'] ?? null) === 'periodos')
                                             <a class="action-link" href="{{ route('admin.periodos.index') }}">Abrir</a>
+                                        @elseif ($roleKey === 'admin' && ($action['slug'] ?? null) === 'agenda')
+                                            <a class="action-link" href="{{ route('admin.agenda.index') }}">Abrir</a>
+                                        @elseif ($roleKey === 'admin' && ($action['slug'] ?? null) === 'representantes')
+                                            <a class="action-link" href="{{ route('admin.representantes.index') }}">Abrir</a>
                                         @elseif ($roleKey === 'admin' && ($action['slug'] ?? null) === 'docentes')
                                             <a class="action-link" href="{{ route('admin.docentes.index') }}">Abrir</a>
                                         @elseif ($roleKey === 'admin' && ($action['slug'] ?? null) === 'usuarios')

@@ -27,28 +27,35 @@
     <span>Administracion de docentes</span>
 @endsection
 
+@section('head')
+    <link rel="stylesheet" href="{{ asset('css/docentes.css') }}">
+@endsection
+
 @section('content')
-    <section class="hero" style="display: block;">
-        <h2 style="margin: 0 0 6px; font-size: 22px; font-weight: 700; line-height: 1.2;">Administración de Docentes</h2>
-        @if ($institucionActiva)
-            <p style="margin: 0; color: rgba(255,255,255,0.65); font-size: 13px;">
-                Gestiona el personal docente de <strong style="color: rgba(255,255,255,0.9);">{{ $institucionActiva->nombre }}</strong>
-            </p>
-        @else
-            <p style="margin: 0; color: rgba(255,255,255,0.65); font-size: 13px;">Gestiona el personal docente de todas las instituciones disponibles.</p>
-        @endif
-    </section>
-
-    <section class="stats">
-        <article class="card"><strong class="metric">{{ $metricas['total'] }}</strong><span>Total docentes</span></article>
-        <article class="card"><strong class="metric">{{ $metricas['activos'] }}</strong><span>Activos</span></article>
-        <article class="card"><strong class="metric">{{ $metricas['observacion'] }}</strong><span>En observacion</span></article>
-        <article class="card"><strong class="metric">{{ $metricas['inactivos'] }}</strong><span>Inactivos</span></article>
-    </section>
-
+    <div class="docentes-view">
     <section class="panel">
+    <div class="docentes-top">
+    <header class="docentes-header">
+        <div>
+            <h2>Administración de docentes</h2>
+            <p>{{ $institucionActiva?->nombre ?? 'Todas las instituciones' }}</p>
+        </div>
+        <div class="actions">
+            <a class="btn" href="{{ route('admin.docentes.print', request()->only(['search', 'estado', 'institucion'])) }}" target="_blank" rel="noopener"><i class="fa-solid fa-print" aria-hidden="true"></i> Imprimir PDF</a>
+            <a class="btn" href="{{ route('admin.docentes.signatures', request()->only(['search', 'estado', 'institucion'])) }}" target="_blank" rel="noopener"><i class="fa-solid fa-file-signature" aria-hidden="true"></i> Lista para firmas</a>
+            <a class="btn" href="{{ route('admin.docentes.excel', request()->only(['search', 'estado', 'institucion'])) }}"><i class="fa-solid fa-file-excel" aria-hidden="true"></i> Exportar a Excel</a>
+            <button class="btn btn-primary" type="button" data-open-create><i class="fa-solid fa-plus" aria-hidden="true"></i> Nuevo docente</button>
+        </div>
+    </header>
+    <div class="docentes-summary" aria-label="Resumen de docentes">
+        <span><strong>{{ $metricas['total'] }}</strong> docentes</span>
+        <span><strong>{{ $metricas['activos'] }}</strong> activos</span>
+        <span><strong>{{ $metricas['observacion'] }}</strong> en observación</span>
+        <span><strong>{{ $metricas['inactivos'] }}</strong> inactivos</span>
+    </div>
+
         <div class="section-title">
-            <h2>Listado operativo</h2>
+            <h2>Listado de docentes</h2>
             <span>{{ $docentes->total() }} resultados</span>
         </div>
 
@@ -58,7 +65,7 @@
 
         <div class="toolbar">
             <form class="filters" method="GET" action="{{ route('admin.docentes.index') }}">
-                <input class="input" type="text" name="search" placeholder="Buscar por nombre, cedula, usuario, correo o telefono" value="{{ request('search') }}">
+                <input class="input" type="text" name="search" aria-label="Buscar docentes" placeholder="Nombre, cédula, usuario o correo" value="{{ request('search') }}">
                 @if (! $institucionActiva)
                     <select class="select" name="institucion">
                         <option value="">Todas las instituciones</option>
@@ -67,20 +74,29 @@
                         @endforeach
                     </select>
                 @endif
-                <select class="select" name="estado">
+                <select class="select" name="estado" aria-label="Filtrar por estado">
                     <option value="">Todos los estados</option>
                     @foreach ($estados as $value => $label)
                         <option value="{{ $value }}" @selected(request('estado') === $value)>{{ $label }}</option>
                     @endforeach
                 </select>
+                <label class="docentes-page-size" for="docentes-per-page">Mostrar
+                    <select id="docentes-per-page" class="select" name="per_page">
+                        @foreach ([25, 50, 100] as $cantidad)
+                            <option value="{{ $cantidad }}" @selected($docentes->perPage() === $cantidad)>{{ $cantidad }}</option>
+                        @endforeach
+                    </select>
+                </label>
                 <button class="btn" type="submit">Filtrar</button>
                 <a class="btn" href="{{ route('admin.docentes.index') }}">Limpiar</a>
             </form>
 
-            <button class="btn btn-primary" type="button" data-open-create>Nuevo docente</button>
         </div>
 
+    </div>
+
         @if ($docentes->count())
+            <div class="docentes-table-scroll">
             <table>
                 <thead>
                     <tr>
@@ -97,7 +113,7 @@
                     @foreach ($docentes as $docente)
                         @php
                             $persona = $docente->persona;
-                            $nombre = trim(implode(' ', array_filter([$persona?->primer_nombre, $persona?->segundo_nombre, $persona?->primer_apellido, $persona?->segundo_apellido])));
+                            $nombre = trim(implode(' ', array_filter([$persona?->tratamiento, $persona?->primer_nombre, $persona?->segundo_nombre, $persona?->primer_apellido, $persona?->segundo_apellido])));
                         @endphp
                         <tr>
                             <td class="name-cell">
@@ -115,7 +131,8 @@
                             <td><span class="badge badge-{{ strtolower($docente->estado) }}">{{ $estados[$docente->estado] ?? $docente->estado }}</span></td>
                             <td>
                                 <div class="actions">
-                                    <a class="btn mini-btn record-action" href="{{ route('admin.docentes.index', array_filter(['edit' => $docente->id, 'search' => request('search'), 'institucion' => request('institucion'), 'estado' => request('estado')])) }}" aria-label="Editar registro" title="Editar"><i class="fa-solid fa-pen-to-square" aria-hidden="true"></i></a>
+                                    <button class="btn mini-btn record-action" type="button" data-open-datos="datos-docente-{{ $docente->id }}" aria-label="Ver datos del docente" title="Ver datos"><i class="fa-solid fa-eye" aria-hidden="true"></i></button>
+                                    <a class="btn mini-btn record-action" href="{{ route('admin.docentes.index', array_filter(['edit' => $docente->id, 'search' => request('search'), 'institucion' => request('institucion'), 'estado' => request('estado'), 'per_page' => $docentes->perPage(), 'page' => request('page')])) }}" aria-label="Editar registro" title="Editar"><i class="fa-solid fa-pen-to-square" aria-hidden="true"></i></a>
                                     <form method="POST" action="{{ route('admin.docentes.destroy', $docente) }}" onsubmit="return confirm('Desea eliminar este docente?');">
                                         @csrf
                                         @method('DELETE')
@@ -127,8 +144,10 @@
                     @endforeach
                 </tbody>
             </table>
+            </div>
 
             <div class="pager">
+                <span class="docentes-range">{{ $docentes->firstItem() }}–{{ $docentes->lastItem() }} de {{ $docentes->total() }} docentes</span>
                 @if ($docentes->onFirstPage())
                     <span class="btn">Anterior</span>
                 @else
@@ -147,9 +166,12 @@
             <div class="empty">No hay docentes con los filtros actuales.</div>
         @endif
     </section>
+    </div>
 @endsection
 
 @section('dialogs')
+    @include('admin.docentes.partials.datos')
+
     <dialog class="modal" id="create-docente-modal">
         <div class="modal-card">
             <div class="modal-header">
@@ -195,6 +217,10 @@
                             </select>
                         </div>
                     @endif
+                    <div class="field-group">
+                        <label for="create_tratamiento">Título o tratamiento</label>
+                        <input id="create_tratamiento" class="input" type="text" name="tratamiento" value="{{ old('tratamiento') }}" maxlength="120" placeholder="Ej.: Lic., Ing., Mgtr.">
+                    </div>
                     <div class="field-group">
                         <label for="create_primer_nombre">Primer nombre</label>
                         <input id="create_primer_nombre" class="input" type="text" name="primer_nombre" value="{{ old('primer_nombre') }}" required>
@@ -336,6 +362,10 @@
                             </div>
                         @endif
                         <div class="field-group">
+                            <label for="edit_tratamiento">Título o tratamiento</label>
+                            <input id="edit_tratamiento" class="input" type="text" name="tratamiento" value="{{ old('tratamiento', $personaEditando?->tratamiento) }}" maxlength="120" placeholder="Ej.: Lic., Ing., Mgtr.">
+                        </div>
+                        <div class="field-group">
                             <label for="edit_primer_nombre">Primer nombre</label>
                             <input id="edit_primer_nombre" class="input" type="text" name="primer_nombre" value="{{ old('primer_nombre', $personaEditando?->primer_nombre) }}" required>
                         </div>
@@ -432,6 +462,15 @@
 
 @section('scripts')
     <script>
+        document.querySelectorAll('[data-open-datos]').forEach((button) => {
+            button.addEventListener('click', () => document.getElementById(button.dataset.openDatos)?.showModal());
+        });
+        document.querySelectorAll('[data-close-datos]').forEach((button) => {
+            button.addEventListener('click', () => button.closest('dialog')?.close());
+        });
+        document.getElementById('docentes-per-page')?.addEventListener('change', (event) => {
+            event.target.form.requestSubmit();
+        });
         const createModal = document.getElementById('create-docente-modal');
         const editModal = document.getElementById('edit-docente-modal');
 

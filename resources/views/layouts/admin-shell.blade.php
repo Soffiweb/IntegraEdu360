@@ -795,7 +795,7 @@
     @endif
     @yield('head')
 </head>
-<body>
+<body class="{{ ($agendaRole ?? 'admin') === 'directivo' ? 'directivo-panel' : '' }}">
     @php
         $activeAdminNav = trim($__env->yieldContent('admin-nav', ''));
         $sidebarTitle = trim($__env->yieldContent('sidebar-title', 'Administrador'));
@@ -820,6 +820,38 @@
             </div>
 
             <nav class="sidebar-nav">
+                @if (($agendaRole ?? 'admin') === 'directivo')
+                    <a class="nav-item" href="{{ route('roles.dashboard', 'directivo') }}">
+                        <i class="fa-solid fa-chart-pie" aria-hidden="true"></i>
+                        <span>Resumen Ejecutivo</span>
+                        <small>Inicio</small>
+                    </a>
+                    <a class="nav-item {{ $activeAdminNav === 'agenda' ? 'active' : '' }}" href="{{ route('directivo.agenda.index') }}" @if($activeAdminNav === 'agenda') aria-current="page" @endif>
+                        <i class="fa-regular fa-calendar-check" aria-hidden="true"></i>
+                        <span>Agenda Institucional</span>
+                        <small>Eventos</small>
+                    </a>
+                    <a class="nav-item {{ $activeAdminNav === 'asignaciones' ? 'active' : '' }}" href="{{ route('directivo.asignaciones.index') }}" @if($activeAdminNav === 'asignaciones') aria-current="page" @endif>
+                        <i class="fa-solid fa-list-check" aria-hidden="true"></i>
+                        <span>Asignaciones docentes</span>
+                        <small>Horas y comisiones</small>
+                    </a>
+                    <a class="nav-item {{ $activeAdminNav === 'autoridades' ? 'active' : '' }}" href="{{ route('directivo.autoridades.index') }}" @if($activeAdminNav === 'autoridades') aria-current="page" @endif>
+                        <i class="fa-solid fa-users" aria-hidden="true"></i>
+                        <span>Autoridades y consejo</span>
+                        <small>Por período lectivo</small>
+                    </a>
+                    <a class="nav-item {{ $activeAdminNav === 'directores-area' ? 'active' : '' }}" href="{{ route('directivo.directores-area.index') }}" @if($activeAdminNav === 'directores-area') aria-current="page" @endif>
+                        <i class="fa-solid fa-user-tie" aria-hidden="true"></i>
+                        <span>Directores de área</span>
+                        <small>Por período lectivo</small>
+                    </a>
+                    <a class="nav-item {{ $activeAdminNav === 'tutorias' ? 'active' : '' }}" href="{{ route('directivo.tutorias.index') }}" @if($activeAdminNav === 'tutorias') aria-current="page" @endif>
+                        <i class="fa-solid fa-chalkboard-user" aria-hidden="true"></i>
+                        <span>Docentes tutores</span>
+                        <small>Por período lectivo</small>
+                    </a>
+                @else
                 <a class="nav-item {{ $activeAdminNav === 'resumen' ? 'active' : '' }}" href="{{ route('admin.resumen.index') }}" @if($activeAdminNav === 'resumen') aria-current="page" @endif>
                     <i class="fa-solid fa-chart-pie" aria-hidden="true"></i>
                     <span>Resumen Ejecutivo</span>
@@ -835,14 +867,19 @@
                     <span>Periodos academicos</span>
                     <small>Gestion</small>
                 </a>
-                <a class="nav-item {{ $activeAdminNav === 'usuarios' ? 'active' : '' }}" href="{{ route('admin.usuarios.index') }}">
-                    <i class="fa-solid fa-users-gear"></i>
-                    <span>Administracion de usuarios</span>
-                    <small>Gestion</small>
+                <a class="nav-item {{ $activeAdminNav === 'agenda' ? 'active' : '' }}" href="{{ route('admin.agenda.index') }}">
+                    <i class="fa-regular fa-calendar-check"></i>
+                    <span>Agenda institucional</span>
+                    <small>Eventos</small>
                 </a>
                 <a class="nav-item nav-item-highlight {{ $activeAdminNav === 'docentes' ? 'active' : '' }}" href="{{ route('admin.docentes.index') }}">
                     <i class="fa-solid fa-chalkboard-user"></i>
                     <span>Administracion de docentes</span>
+                    <small>Gestion</small>
+                </a>
+                <a class="nav-item nav-item-highlight {{ $activeAdminNav === 'representantes' ? 'active' : '' }}" href="{{ route('admin.representantes.index') }}">
+                    <i class="fa-solid fa-people-roof"></i>
+                    <span>Administracion de representantes</span>
                     <small>Gestion</small>
                 </a>
                 <a class="nav-item nav-item-highlight {{ $activeAdminNav === 'estudiantes' ? 'active' : '' }}" href="{{ route('admin.estudiantes.index') }}">
@@ -870,6 +907,12 @@
                     <span>Administracion de asignaturas</span>
                     <small>Gestion</small>
                 </a>
+                <a class="nav-item {{ $activeAdminNav === 'usuarios' ? 'active' : '' }}" href="{{ route('admin.usuarios.index') }}">
+                    <i class="fa-solid fa-users-gear"></i>
+                    <span>Administracion de usuarios</span>
+                    <small>Gestion</small>
+                </a>
+                @endif
                 <form class="nav-item-form" method="POST" action="{{ route('auth.logout') }}">
                     @csrf
                     <button class="nav-item nav-item-button" type="submit">
@@ -891,7 +934,7 @@
                     @hasSection('topbar-action')
                         @yield('topbar-action')
                     @else
-                        <a class="btn" href="{{ route('roles.dashboard', 'admin') }}">Volver al dashboard</a>
+                        <a class="btn" href="{{ route('roles.dashboard', $agendaRole ?? 'admin') }}">Volver al dashboard</a>
                     @endif
                 </div>
 

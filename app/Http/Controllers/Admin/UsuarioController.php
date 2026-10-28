@@ -7,8 +7,8 @@ use App\Models\Institucion;
 use App\Models\Persona;
 use App\Models\Rol;
 use App\Models\Usuario;
-use Illuminate\Http\Request;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
@@ -176,8 +176,7 @@ class UsuarioController extends Controller
         ?Usuario $usuario = null,
         ?Institucion $institucionActiva = null,
         ?Rol $adminRoleThreshold = null,
-    ): array
-    {
+    ): array {
         $rules = [
             'persona_id' => ['nullable'],
             'institucion_id' => ['required'],
@@ -428,7 +427,7 @@ class UsuarioController extends Controller
 
         $query->whereHas('roles', function (Builder $roleQuery) use ($adminRoleThreshold) {
             $this->applyRoleThresholdToRolesQuery($roleQuery, $adminRoleThreshold);
-        });
+        })->whereDoesntHave('roles', fn (Builder $roleQuery) => $roleQuery->whereIn('roles.id', $this->superusuarioRoleIds()));
     }
 
     private function applyRoleThresholdToRolesQuery(Builder $query, Rol $adminRoleThreshold): void
@@ -441,15 +440,24 @@ class UsuarioController extends Controller
             return;
         }
 
-        $query->where('roles.id', $adminRoleThreshold->id);
+        $query->whereNotIn('roles.id', $this->superusuarioRoleIds());
+    }
+
+    private function superusuarioRoleIds(): array
+    {
+        $aliases = array_map('integraEduNormalizeRoleValue', integraEduRoleAliases('superusuario'));
+
+        return Rol::query()->get(['id', 'codigo', 'nombre'])
+            ->filter(fn (Rol $rol) => in_array(integraEduNormalizeRoleValue($rol->codigo), $aliases, true)
+                || in_array(integraEduNormalizeRoleValue($rol->nombre), $aliases, true))
+            ->pluck('id')->all();
     }
 
     private function usuarioMatchesAdminRoleThreshold(Usuario $usuario, Rol $adminRoleThreshold): bool
     {
-        return $usuario->roles()
-            ->where(function (Builder $query) use ($adminRoleThreshold) {
-                $this->applyRoleThresholdToRolesQuery($query, $adminRoleThreshold);
-            })
-            ->exists();
+        $query = Usuario::query()->whereKey($usuario->id);
+        $this->applyAdminRoleThreshold($query, $adminRoleThreshold);
+
+        return $query->exists();
     }
 }

@@ -7,6 +7,9 @@ use App\Models\Institucion;
 use App\Models\Persona;
 use App\Models\Rol;
 use App\Models\Usuario;
+use App\Services\ExcelExporter;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -18,44 +21,15 @@ class DocenteController extends Controller
         $rolDocente = $this->docenteRole();
         $institucionActiva = $this->activeInstitucion($request);
 
-        $query = Usuario::query()
-            ->with(['persona', 'institucion', 'roles'])
-            ->whereHas('roles', fn ($roleQuery) => $roleQuery->where('roles.id', $rolDocente->id));
+        $query = $this->filteredQuery($request, $rolDocente, $institucionActiva);
 
-        if ($search = trim((string) $request->string('search'))) {
-            $query->where(function ($builder) use ($search) {
-                $builder
-                    ->where('username', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%")
-                    ->orWhereHas('institucion', fn ($institucionQuery) => $institucionQuery->where('nombre', 'like', "%{$search}%"))
-                    ->orWhereHas('persona', function ($personaQuery) use ($search) {
-                        $personaQuery
-                            ->where('numero_identificacion', 'like', "%{$search}%")
-                            ->orWhere('primer_nombre', 'like', "%{$search}%")
-                            ->orWhere('segundo_nombre', 'like', "%{$search}%")
-                            ->orWhere('primer_apellido', 'like', "%{$search}%")
-                            ->orWhere('segundo_apellido', 'like', "%{$search}%")
-                            ->orWhere('telefono', 'like', "%{$search}%")
-                            ->orWhere('celular', 'like', "%{$search}%")
-                            ->orWhere('email', 'like', "%{$search}%");
-                    });
-            });
-        }
-
-        if ($institucionActiva) {
-            $query->where('institucion_id', $institucionActiva->id);
-        } elseif ($institucionId = $request->string('institucion')->toString()) {
-            $query->where('institucion_id', $institucionId);
-        }
-
-        if ($estado = $request->string('estado')->toString()) {
-            $query->where('estado', strtoupper($estado));
-        }
+        $porPagina = (int) $request->input('per_page', 25);
+        $porPagina = in_array($porPagina, [25, 50, 100], true) ? $porPagina : 25;
 
         $docentes = $query
             ->orderByRaw("CASE WHEN estado = 'ACTIVO' THEN 0 WHEN estado = 'OBSERVACION' THEN 1 ELSE 2 END")
             ->orderBy('username')
-            ->paginate(8)
+            ->paginate($porPagina)
             ->withQueryString();
 
         $docenteEditando = null;
@@ -92,6 +66,115 @@ class DocenteController extends Controller
         ]);
     }
 
+    public function print(Request $request)
+    {
+        return $this->teacherPdf($request, false);
+    }
+
+    public function printSignatures(Request $request)
+    {
+        return $this->teacherPdf($request, true);
+    }
+
+    public function excel(Request $request, ExcelExporter $exporter)
+    {
+        $docentes = $this->filteredQuery($request, $this->docenteRole(), $this->activeInstitucion($request))
+            ->orderBy('username')->lazy(500);
+        $rows = $docentes->map(function (Usuario $docente) {
+            $persona = $docente->persona;
+
+            return [
+                $persona?->numero_identificacion, $persona?->tratamiento,
+                $persona?->primer_nombre, $persona?->segundo_nombre,
+                $persona?->primer_apellido, $persona?->segundo_apellido,
+                $persona?->fecha_nacimiento, $this->sexos()[$persona?->sexo] ?? '',
+                $persona?->telefono, $persona?->celular, $persona?->email,
+                $persona?->provincia, $persona?->canton, $persona?->parroquia, $persona?->direccion,
+                $docente->institucion?->nombre, $docente->username, $docente->email,
+                $this->estados()[$docente->estado] ?? $docente->estado,
+                $docente->ultimo_acceso?->format('Y-m-d H:i'),
+            ];
+        });
+        $content = $exporter->export([
+            'Identificación', 'Título o tratamiento', 'Primer nombre', 'Segundo nombre',
+            'Primer apellido', 'Segundo apellido', 'Fecha de nacimiento', 'Sexo',
+            'Teléfono', 'Celular', 'Correo personal', 'Provincia', 'Cantón', 'Parroquia', 'Dirección',
+            'Institución', 'Usuario', 'Correo de acceso', 'Estado', 'Último acceso',
+        ], $rows);
+
+        return response($content, 200, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Content-Disposition' => 'attachment; filename="docentes.xlsx"',
+        ]);
+    }
+
+    private function teacherPdf(Request $request, bool $firmas)
+    {
+        $institucionActiva = $this->activeInstitucion($request);
+        $institucion = $institucionActiva ?? ($request->filled('institucion') ? Institucion::find($request->input('institucion')) : null);
+        $docentes = $this->filteredQuery($request, $this->docenteRole(), $institucionActiva)
+            ->orderByRaw("CASE WHEN estado = 'ACTIVO' THEN 0 WHEN estado = 'OBSERVACION' THEN 1 ELSE 2 END")
+            ->orderBy('username')->get();
+        $logoPath = $institucion?->logo1 ? storage_path('app/public/'.$institucion->logo1) : null;
+        if ($logoPath && is_file($logoPath) && ! extension_loaded('gd') && (getimagesize($logoPath)[2] ?? null) !== IMAGETYPE_JPEG) {
+            $logoPath = null;
+        }
+        $pdf = Pdf::loadView($firmas ? 'admin.docentes.firmas-pdf' : 'admin.docentes.pdf', [
+            'docentes' => $docentes,
+            'institucion' => $institucion,
+            'logoPath' => $logoPath && is_file($logoPath) ? $logoPath : null,
+            'estados' => $this->estados(),
+            'filtros' => $request->only(['search', 'estado']),
+            'generadoEn' => now()->timezone('America/Guayaquil'),
+        ])->setPaper('a4', 'portrait');
+        $pdf->render();
+        $domPdf = $pdf->getDomPDF();
+        $font = $domPdf->getFontMetrics()->getFont('DejaVu Sans', 'normal');
+        $domPdf->getCanvas()->page_text(510, 814, 'Pagina {PAGE_NUM} de {PAGE_COUNT}', $font, 6, [0.39, 0.45, 0.51]);
+
+        return $pdf->stream($firmas ? 'lista-firmas-docentes.pdf' : 'lista-docentes.pdf');
+    }
+
+    private function filteredQuery(Request $request, Rol $rolDocente, ?Institucion $institucionActiva): Builder
+    {
+        $query = Usuario::query()
+            ->with(['persona', 'institucion', 'roles'])
+            ->whereHas('roles', fn ($roleQuery) => $roleQuery->where('roles.id', $rolDocente->id));
+
+        if ($search = trim((string) $request->string('search'))) {
+            $query->where(function ($builder) use ($search) {
+                $builder
+                    ->where('username', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhereHas('institucion', fn ($institucionQuery) => $institucionQuery->where('nombre', 'like', "%{$search}%"))
+                    ->orWhereHas('persona', function ($personaQuery) use ($search) {
+                        $personaQuery
+                            ->where('numero_identificacion', 'like', "%{$search}%")
+                            ->orWhere('tratamiento', 'like', "%{$search}%")
+                            ->orWhere('primer_nombre', 'like', "%{$search}%")
+                            ->orWhere('segundo_nombre', 'like', "%{$search}%")
+                            ->orWhere('primer_apellido', 'like', "%{$search}%")
+                            ->orWhere('segundo_apellido', 'like', "%{$search}%")
+                            ->orWhere('telefono', 'like', "%{$search}%")
+                            ->orWhere('celular', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        if ($institucionActiva) {
+            $query->where('institucion_id', $institucionActiva->id);
+        } elseif ($institucionId = $request->string('institucion')->toString()) {
+            $query->where('institucion_id', $institucionId);
+        }
+
+        if ($estado = $request->string('estado')->toString()) {
+            $query->where('estado', strtoupper($estado));
+        }
+
+        return $query;
+    }
+
     public function store(Request $request)
     {
         $validated = $this->validatedData($request, null, $this->activeInstitucion($request));
@@ -119,7 +202,7 @@ class DocenteController extends Controller
         $validated = $this->validatedData($request, $usuario, $institucionActiva);
 
         DB::transaction(function () use ($validated, $usuario, $rolDocente) {
-            $persona = $usuario->persona ?? new Persona();
+            $persona = $usuario->persona ?? new Persona;
 
             $persona->fill($this->personaPayload($validated));
             $persona->save();
@@ -183,6 +266,7 @@ class DocenteController extends Controller
                 'max:30',
                 Rule::unique('personas', 'numero_identificacion')->ignore($personaId),
             ],
+            'tratamiento' => ['nullable', 'string', 'max:120'],
             'primer_nombre' => ['required', 'string', 'max:120'],
             'segundo_nombre' => ['nullable', 'string', 'max:120'],
             'primer_apellido' => ['required', 'string', 'max:120'],
@@ -215,6 +299,7 @@ class DocenteController extends Controller
     {
         return [
             'numero_identificacion' => trim($validated['numero_identificacion']),
+            'tratamiento' => $this->nullableTrim($validated['tratamiento'] ?? null),
             'primer_nombre' => trim($validated['primer_nombre']),
             'segundo_nombre' => $this->nullableTrim($validated['segundo_nombre'] ?? null),
             'primer_apellido' => trim($validated['primer_apellido']),
@@ -324,4 +409,3 @@ class DocenteController extends Controller
         return $value === '' ? null : $value;
     }
 }
-

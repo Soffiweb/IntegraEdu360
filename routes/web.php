@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AgendaController;
 use App\Http\Controllers\Admin\AsignaturaController;
 use App\Http\Controllers\Admin\CursoController;
 use App\Http\Controllers\Admin\EspecialidadController;
@@ -7,18 +8,28 @@ use App\Http\Controllers\Admin\EstudianteController;
 use App\Http\Controllers\Admin\InstitucionDatosController;
 use App\Http\Controllers\Admin\ParaleloController;
 use App\Http\Controllers\Admin\PeriodoAcademicoController;
+use App\Http\Controllers\Admin\RepresentanteController;
+use App\Http\Controllers\Admin\ResumenController;
 use App\Http\Controllers\Admin\UsuarioController;
+use App\Http\Controllers\Directivo\AsignacionDocenteController;
+use App\Http\Controllers\Directivo\AutoridadPeriodoController;
+use App\Http\Controllers\Directivo\DirectorAreaController;
+use App\Http\Controllers\Directivo\ReporteDistribucionController;
+use App\Http\Controllers\Directivo\ReporteDocentesAgrupadoController;
+use App\Http\Controllers\Directivo\TutoriaController;
+use App\Http\Controllers\Docente\DistributivoPersonalController;
 use App\Http\Controllers\Inspector\DistribucionHorasController;
 use App\Http\Controllers\Inspector\HorarioDocenteController;
 use App\Http\Controllers\Inspector\NovedadController;
-use App\Http\Controllers\Superusuario\DocenteController;
 use App\Http\Controllers\Superusuario\DistritoController;
+use App\Http\Controllers\Superusuario\DocenteController;
 use App\Http\Controllers\Superusuario\InstitucionController;
 use App\Http\Controllers\Superusuario\RolController;
 use App\Http\Controllers\Superusuario\UsuarioController as SuperusuarioUsuarioController;
 use App\Http\Controllers\Superusuario\ZonaController;
-use App\Models\Institucion;
 use App\Models\Usuario;
+use App\Services\Admin\ResumenInstitucional;
+use App\Services\Superusuario\ResumenEstadistico;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
@@ -190,13 +201,15 @@ if (! function_exists('integraEduDashboards')) {
                 'actions' => [
                     ['label' => 'Datos institucionales', 'description' => 'Editar la informacion principal de la institucion asignada.', 'slug' => 'datos-institucionales'],
                     ['label' => 'Periodos academicos', 'description' => 'Crear y editar periodos academicos de la institucion activa.', 'slug' => 'periodos'],
-                    ['label' => 'Administracion de usuarios', 'description' => 'Gestionar usuarios de la institucion activa.', 'slug' => 'usuarios'],
+                    ['label' => 'Agenda institucional', 'description' => 'Consultar eventos y fechas clave de la institucion activa.', 'slug' => 'agenda'],
                     ['label' => 'Administracion de docentes', 'description' => 'Gestionar docentes de la institucion activa.', 'slug' => 'docentes'],
+                    ['label' => 'Administracion de representantes', 'description' => 'Gestionar representantes y sus alumnos.', 'slug' => 'representantes'],
                     ['label' => 'Administracion de alumnos', 'description' => 'Consultar el espacio de gestion de alumnos.', 'slug' => 'estudiantes'],
                     ['label' => 'Administracion de cursos', 'description' => 'Consultar el espacio de gestion de cursos.', 'slug' => 'cursos'],
                     ['label' => 'Administracion de paralelos', 'description' => 'Consultar el espacio de gestion de paralelos.', 'slug' => 'paralelos'],
                     ['label' => 'Administracion de especialidades', 'description' => 'Consultar el espacio de gestion de especialidades.', 'slug' => 'especialidades'],
                     ['label' => 'Administracion de asignaturas', 'description' => 'Consultar el espacio de gestion de asignaturas.', 'slug' => 'asignaturas'],
+                    ['label' => 'Administracion de usuarios', 'description' => 'Gestionar usuarios de la institucion activa.', 'slug' => 'usuarios'],
                     ['label' => 'Cerrar sesion', 'description' => 'Salir de la sesion actual de forma segura.', 'slug' => 'cerrar-sesion'],
                 ],
                 'alerts' => [
@@ -1716,13 +1729,25 @@ Route::middleware('role.session:superusuario')->name('superusuario.distritos.')-
 
 Route::prefix('/dashboard/admin/docentes')->middleware('role.session:admin')->name('admin.docentes.')->group(function () {
     Route::get('/', [DocenteController::class, 'index'])->name('index');
+    Route::get('/imprimir', [DocenteController::class, 'print'])->name('print');
+    Route::get('/firmas', [DocenteController::class, 'printSignatures'])->name('signatures');
+    Route::get('/excel', [DocenteController::class, 'excel'])->name('excel');
     Route::post('/', [DocenteController::class, 'store'])->name('store');
     Route::put('/{usuario}', [DocenteController::class, 'update'])->name('update');
     Route::delete('/{usuario}', [DocenteController::class, 'destroy'])->name('destroy');
 });
 
+Route::prefix('/dashboard/admin/representantes')->middleware('role.session:admin')->name('admin.representantes.')->group(function () {
+    Route::get('/', [RepresentanteController::class, 'index'])->name('index');
+    Route::get('/excel', [RepresentanteController::class, 'excel'])->name('excel');
+    Route::post('/', [RepresentanteController::class, 'store'])->name('store');
+    Route::put('/{usuario}', [RepresentanteController::class, 'update'])->name('update');
+    Route::delete('/{usuario}', [RepresentanteController::class, 'destroy'])->name('destroy');
+});
+
 Route::prefix('/dashboard/admin/estudiantes')->middleware('role.session:admin')->name('admin.estudiantes.')->group(function () {
     Route::get('/', [EstudianteController::class, 'index'])->name('index');
+    Route::get('/excel', [EstudianteController::class, 'excel'])->name('excel');
     Route::post('/', [EstudianteController::class, 'store'])->name('store');
     Route::put('/{usuario}', [EstudianteController::class, 'update'])->name('update');
     Route::delete('/{usuario}', [EstudianteController::class, 'destroy'])->name('destroy');
@@ -1737,6 +1762,7 @@ Route::prefix('/dashboard/admin/cursos')->middleware('role.session:admin')->name
 
 Route::prefix('/dashboard/admin/paralelos')->middleware('role.session:admin')->name('admin.paralelos.')->group(function () {
     Route::get('/', [ParaleloController::class, 'index'])->name('index');
+    Route::get('/pdf', [ParaleloController::class, 'pdf'])->name('pdf');
     Route::post('/', [ParaleloController::class, 'store'])->name('store');
     Route::put('/{paralelo}', [ParaleloController::class, 'update'])->name('update');
     Route::delete('/{paralelo}', [ParaleloController::class, 'destroy'])->name('destroy');
@@ -1764,6 +1790,48 @@ Route::prefix('/dashboard/admin/periodos-academicos')->middleware('role.session:
     Route::delete('/{periodo}', [PeriodoAcademicoController::class, 'destroy'])->name('destroy');
 });
 
+Route::prefix('/dashboard/admin/agenda')->middleware('role.session:admin')->name('admin.agenda.')->group(function () {
+    Route::get('/', [AgendaController::class, 'index'])->name('index');
+    Route::get('/imprimir', [AgendaController::class, 'print'])->name('print');
+    Route::post('/', [AgendaController::class, 'store'])->name('store');
+    Route::put('/{agenda}', [AgendaController::class, 'update'])->name('update');
+    Route::delete('/{agenda}', [AgendaController::class, 'destroy'])->name('destroy');
+});
+
+Route::prefix('/dashboard/directivo/agenda')->middleware('role.session:directivo')->name('directivo.agenda.')->group(function () {
+    Route::get('/', [AgendaController::class, 'index'])->name('index');
+    Route::get('/imprimir', [AgendaController::class, 'print'])->name('print');
+    Route::post('/', [AgendaController::class, 'store'])->name('store');
+    Route::put('/{agenda}', [AgendaController::class, 'update'])->name('update');
+    Route::delete('/{agenda}', [AgendaController::class, 'destroy'])->name('destroy');
+});
+
+Route::prefix('/dashboard/directivo/asignaciones-docentes')->middleware('role.session:directivo')->name('directivo.asignaciones.')->group(function () {
+    Route::get('/', [AsignacionDocenteController::class, 'index'])->name('index');
+    Route::get('/pdf', ReporteDistribucionController::class)->name('pdf');
+    Route::get('/pdf/agrupado/{agrupacion}', ReporteDocentesAgrupadoController::class)
+        ->where('agrupacion', 'comisiones|tutores|asignaturas|areas')->name('agrupado.pdf');
+    Route::get('/pdf/docente/{docente}', ReporteDistribucionController::class)->whereNumber('docente')->name('docente.pdf');
+    Route::post('/', [AsignacionDocenteController::class, 'store'])->name('store');
+    Route::put('/{asignacion}', [AsignacionDocenteController::class, 'update'])->name('update');
+    Route::delete('/{asignacion}', [AsignacionDocenteController::class, 'destroy'])->name('destroy');
+});
+
+Route::prefix('/dashboard/directivo/autoridades')->middleware('role.session:directivo')->name('directivo.autoridades.')->group(function () {
+    Route::get('/', [AutoridadPeriodoController::class, 'index'])->name('index');
+    Route::put('/', [AutoridadPeriodoController::class, 'update'])->name('update');
+});
+
+Route::prefix('/dashboard/directivo/directores-area')->middleware('role.session:directivo')->name('directivo.directores-area.')->group(function () {
+    Route::get('/', [DirectorAreaController::class, 'index'])->name('index');
+    Route::put('/', [DirectorAreaController::class, 'update'])->name('update');
+});
+
+Route::prefix('/dashboard/directivo/tutorias')->middleware('role.session:directivo')->name('directivo.tutorias.')->group(function () {
+    Route::get('/', [TutoriaController::class, 'index'])->name('index');
+    Route::put('/{paralelo}', [TutoriaController::class, 'update'])->name('update');
+});
+
 Route::prefix('/dashboard/admin/datos-institucionales')->middleware('role.session:admin')->name('admin.institucion.')->group(function () {
     Route::get('/', [InstitucionDatosController::class, 'index'])->name('index');
     Route::put('/{institucion}', [InstitucionDatosController::class, 'update'])->name('update');
@@ -1780,7 +1848,7 @@ Route::get('/acceso/{role}', function (string $role) {
     ]);
 })->name('roles.access');
 
-Route::get('/dashboard/admin/resumen', [\App\Http\Controllers\Admin\ResumenController::class, 'index'])
+Route::get('/dashboard/admin/resumen', [ResumenController::class, 'index'])
     ->middleware('role.session:admin')
     ->name('admin.resumen.index');
 
@@ -1800,12 +1868,12 @@ Route::get('/dashboard/{role}', function (string $role) {
             'role' => $roles[$role],
             'dashboard' => $dashboards[$role],
             'dashboardSection' => 'resumen',
-            'resumen' => app(\App\Services\Superusuario\ResumenEstadistico::class)->datos(),
+            'resumen' => app(ResumenEstadistico::class)->datos(),
         ]);
     }
 
     if ($role === 'admin') {
-        return app(\App\Http\Controllers\Admin\ResumenController::class)->index(request(), app(\App\Services\Admin\ResumenInstitucional::class));
+        return app(ResumenController::class)->index(request(), app(ResumenInstitucional::class));
     }
 
     if ($role === 'inspector') {
@@ -1860,4 +1928,29 @@ Route::prefix('/dashboard/inspector/horario-docente')->middleware('role.session:
 
 Route::prefix('/dashboard/inspector/novedades')->middleware('role.session:inspector')->name('inspector.novedades.')->group(function () {
     Route::get('/', [NovedadController::class, 'index'])->name('index');
+});
+
+Route::get('/dashboard/docente/distributivo-personal', [DistributivoPersonalController::class, 'index'])
+    ->middleware('role.session:docente')
+    ->name('docente.distributivo.index');
+
+Route::get('/dashboard/docente/horario-personal', [\App\Http\Controllers\Docente\HorarioPersonalController::class, 'index'])
+    ->middleware('role.session:docente')
+    ->name('docente.horario.index');
+
+Route::get('/dashboard/docente/estudiantes-curso', [\App\Http\Controllers\Docente\EstudiantesCursoController::class, 'index'])
+    ->middleware('role.session:docente')
+    ->name('docente.estudiantes.index');
+
+Route::prefix('/dashboard/docente/actualizar-datos')->middleware('role.session:docente')->name('docente.datos.')->group(function () {
+    Route::get('/', [\App\Http\Controllers\Docente\DatosPersonalesController::class, 'edit'])->name('edit');
+    Route::put('/', [\App\Http\Controllers\Docente\DatosPersonalesController::class, 'update'])->name('update');
+});
+
+Route::get('/dashboard/docente/distributivo-personal/{asignacion}/estudiantes/pdf', \App\Http\Controllers\Docente\ListadoEstudiantesPdfController::class)
+    ->middleware('role.session:docente')->whereNumber('asignacion')->name('docente.distributivo.estudiantes.pdf');
+
+Route::prefix('/dashboard/docente/asistencia')->middleware('role.session:docente')->name('docente.asistencia.')->group(function () {
+    Route::get('/', [\App\Http\Controllers\Docente\AsistenciaController::class, 'index'])->name('index');
+    Route::put('/', [\App\Http\Controllers\Docente\AsistenciaController::class, 'update'])->name('update');
 });

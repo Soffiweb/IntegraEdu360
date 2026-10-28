@@ -1,0 +1,17 @@
+.tutoria-help { color: var(--bc2); font-size: 12px; line-height: 1.5; }
+.tutorias-table-wrap { background: var(--base-100); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
+.tutorias-table th { background: var(--th-bg); color: var(--p); border-bottom: 2px solid var(--p); }
+.tutorias-table small { display: block; margin-top: 5px; color: var(--bc2); }
+.tutoria-form { display: flex; align-items: center; gap: 8px; }
+.tutoria-form .select { min-width: 180px; width: 100%; max-width: 340px; }
+.tutoria-form .btn { flex-shrink: 0; }
+.tutorias-table td { font-size: 12px; }
+@media (max-width: 900px) {
+    .tutoria-form { flex-direction: column; align-items: stretch; }
+    .tutoria-form .select { min-width: 0; max-width: none; }
+}
+@media (max-width: 640px) {
+    .tutorias-table td { padding: 8px 14px; }
+    .tutorias-table td::before { content: attr(data-label); display: block; color: var(--bc2); font-size: 11px; margin-bottom: 5px; }
+    .tutorias-workspace .asignacion-section-heading { align-items: flex-start; flex-direction: column; }
+}

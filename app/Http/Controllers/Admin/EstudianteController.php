@@ -7,9 +7,12 @@ use App\Models\Institucion;
 use App\Models\Persona;
 use App\Models\Rol;
 use App\Models\Usuario;
+use App\Services\ExcelExporter;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class EstudianteController extends Controller
 {
@@ -18,8 +21,93 @@ class EstudianteController extends Controller
         $rolEstudiante = $this->estudianteRole();
         $institucionActiva = $this->activeInstitucion($request);
 
+        $query = $this->filteredQuery($request, $rolEstudiante, $institucionActiva);
+
+        $porPagina = (int) $request->input('per_page', 25);
+        $porPagina = in_array($porPagina, [25, 50, 100], true) ? $porPagina : 25;
+
+        $estudiantes = $query
+            ->orderByRaw("CASE WHEN estado = 'ACTIVO' THEN 0 WHEN estado = 'OBSERVACION' THEN 1 ELSE 2 END")
+            ->orderBy('username')
+            ->paginate($porPagina)
+            ->withQueryString();
+
+        $estudianteEditando = null;
+
+        if ($request->filled('edit')) {
+            $estudianteEditando = Usuario::query()
+                ->with(['persona', 'institucion', 'roles', 'representante.persona'])
+                ->whereHas('roles', fn ($roleQuery) => $roleQuery->where('roles.id', $rolEstudiante->id))
+                ->findOrFail((int) $request->input('edit'));
+
+            abort_unless(! $institucionActiva || (int) $estudianteEditando->institucion_id === (int) $institucionActiva->id, 404);
+        }
+
+        $metricasQuery = Usuario::query()
+            ->whereHas('roles', fn ($roleQuery) => $roleQuery->where('roles.id', $rolEstudiante->id));
+
+        if ($institucionActiva) {
+            $metricasQuery->where('institucion_id', $institucionActiva->id);
+        }
+
+        return view('admin.estudiantes.index', [
+            'estudiantes' => $estudiantes,
+            'estudianteEditando' => $estudianteEditando,
+            'instituciones' => $institucionActiva ? collect([$institucionActiva]) : $this->availableInstituciones(),
+            'institucionActiva' => $institucionActiva,
+            'estados' => $this->estados(),
+            'sexos' => $this->sexos(),
+            'parentescos' => $this->parentescos(),
+            'representantesDisponibles' => Usuario::representantes()->with('persona')->where('institucion_id', $institucionActiva?->id ?? $estudianteEditando?->institucion_id)->orderBy('username')->get(),
+            'metricas' => [
+                'total' => (clone $metricasQuery)->count(),
+                'activos' => (clone $metricasQuery)->where('estado', 'ACTIVO')->count(),
+                'observacion' => (clone $metricasQuery)->where('estado', 'OBSERVACION')->count(),
+                'inactivos' => (clone $metricasQuery)->where('estado', 'INACTIVO')->count(),
+            ],
+        ]);
+    }
+
+    public function excel(Request $request, ExcelExporter $exporter)
+    {
+        $estudiantes = $this->filteredQuery($request, $this->estudianteRole(), $this->activeInstitucion($request))
+            ->orderBy('username')->lazy(500);
+        $rows = $estudiantes->map(function (Usuario $estudiante) {
+            $persona = $estudiante->persona;
+
+            return [
+                $persona?->numero_identificacion,
+                $persona?->primer_nombre, $persona?->segundo_nombre,
+                $persona?->primer_apellido, $persona?->segundo_apellido,
+                $persona?->fecha_nacimiento, $this->sexos()[$persona?->sexo] ?? '',
+                $persona?->telefono, $persona?->celular, $persona?->email,
+                $persona?->provincia, $persona?->canton, $persona?->parroquia, $persona?->direccion,
+                $estudiante->institucion?->nombre, $estudiante->username, $estudiante->email,
+                $this->estados()[$estudiante->estado] ?? $estudiante->estado,
+                $estudiante->ultimo_acceso?->format('Y-m-d H:i'),
+                $estudiante->representante?->nombre_completo,
+                $estudiante->representante?->persona?->numero_identificacion,
+                $estudiante->representante?->persona?->celular,
+                $this->parentescos()[$estudiante->parentesco_representante] ?? '',
+            ];
+        });
+        $content = $exporter->export([
+            'Identificación', 'Primer nombre', 'Segundo nombre',
+            'Primer apellido', 'Segundo apellido', 'Fecha de nacimiento', 'Sexo',
+            'Teléfono', 'Celular', 'Correo personal', 'Provincia', 'Cantón', 'Parroquia', 'Dirección',
+            'Institución', 'Usuario', 'Correo de acceso', 'Estado', 'Último acceso', 'Representante', 'Identificación del representante', 'Celular del representante', 'Parentesco del representante',
+        ], $rows, 'Alumnos');
+
+        return response($content, 200, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Content-Disposition' => 'attachment; filename="alumnos.xlsx"',
+        ]);
+    }
+
+    private function filteredQuery(Request $request, Rol $rolEstudiante, ?Institucion $institucionActiva): Builder
+    {
         $query = Usuario::query()
-            ->with(['persona', 'institucion', 'roles'])
+            ->with(['persona', 'institucion', 'roles', 'representante.persona'])
             ->whereHas('roles', fn ($roleQuery) => $roleQuery->where('roles.id', $rolEstudiante->id));
 
         if ($search = trim((string) $request->string('search'))) {
@@ -52,44 +140,7 @@ class EstudianteController extends Controller
             $query->where('estado', strtoupper($estado));
         }
 
-        $estudiantes = $query
-            ->orderByRaw("CASE WHEN estado = 'ACTIVO' THEN 0 WHEN estado = 'OBSERVACION' THEN 1 ELSE 2 END")
-            ->orderBy('username')
-            ->paginate(8)
-            ->withQueryString();
-
-        $estudianteEditando = null;
-
-        if ($request->filled('edit')) {
-            $estudianteEditando = Usuario::query()
-                ->with(['persona', 'institucion', 'roles'])
-                ->whereHas('roles', fn ($roleQuery) => $roleQuery->where('roles.id', $rolEstudiante->id))
-                ->findOrFail((int) $request->input('edit'));
-
-            abort_unless(! $institucionActiva || (int) $estudianteEditando->institucion_id === (int) $institucionActiva->id, 404);
-        }
-
-        $metricasQuery = Usuario::query()
-            ->whereHas('roles', fn ($roleQuery) => $roleQuery->where('roles.id', $rolEstudiante->id));
-
-        if ($institucionActiva) {
-            $metricasQuery->where('institucion_id', $institucionActiva->id);
-        }
-
-        return view('admin.estudiantes.index', [
-            'estudiantes' => $estudiantes,
-            'estudianteEditando' => $estudianteEditando,
-            'instituciones' => $institucionActiva ? collect([$institucionActiva]) : $this->availableInstituciones(),
-            'institucionActiva' => $institucionActiva,
-            'estados' => $this->estados(),
-            'sexos' => $this->sexos(),
-            'metricas' => [
-                'total' => (clone $metricasQuery)->count(),
-                'activos' => (clone $metricasQuery)->where('estado', 'ACTIVO')->count(),
-                'observacion' => (clone $metricasQuery)->where('estado', 'OBSERVACION')->count(),
-                'inactivos' => (clone $metricasQuery)->where('estado', 'INACTIVO')->count(),
-            ],
-        ]);
+        return $query;
     }
 
     public function store(Request $request)
@@ -119,7 +170,7 @@ class EstudianteController extends Controller
         $validated = $this->validatedData($request, $usuario, $institucionActiva);
 
         DB::transaction(function () use ($validated, $usuario, $rolEstudiante) {
-            $persona = $usuario->persona ?? new Persona();
+            $persona = $usuario->persona ?? new Persona;
 
             $persona->fill($this->personaPayload($validated));
             $persona->save();
@@ -160,7 +211,12 @@ class EstudianteController extends Controller
     {
         $personaId = $usuario?->persona_id;
 
+        if ($institucionActiva) {
+            $request->merge(['institucion_id' => $institucionActiva->id]);
+        }
         $validated = $request->validate([
+            'parentesco_representante' => ['required', Rule::in(array_keys($this->parentescos()))],
+            'representante_id' => ['required', 'integer', Rule::exists('usuarios', 'id')->where('institucion_id', $request->input('institucion_id'))],
             'institucion_id' => ['required', 'integer', Rule::exists('instituciones', 'id')],
             'username' => [
                 'required',
@@ -197,6 +253,10 @@ class EstudianteController extends Controller
             'parroquia' => ['nullable', 'string', 'max:120'],
             'direccion' => ['nullable', 'string', 'max:255'],
         ]);
+
+        if (! Usuario::representantes()->whereKey($validated['representante_id'])->exists() || (int) $validated['representante_id'] === $usuario?->id) {
+            throw ValidationException::withMessages(['representante_id' => 'Seleccione un representante de la misma institución.']);
+        }
 
         if (blank($validated['password_hash'] ?? null)) {
             unset($validated['password_hash']);
@@ -235,6 +295,8 @@ class EstudianteController extends Controller
     {
         $payload = [
             'persona_id' => $personaId,
+            'representante_id' => (int) $validated['representante_id'],
+            'parentesco_representante' => $validated['parentesco_representante'],
             'institucion_id' => (int) $validated['institucion_id'],
             'username' => trim($validated['username']),
             'email' => $this->nullableTrim($validated['email'] ?? null),
@@ -305,6 +367,22 @@ class EstudianteController extends Controller
             'ACTIVO' => 'Activo',
             'OBSERVACION' => 'Observacion',
             'INACTIVO' => 'Inactivo',
+        ];
+    }
+
+    private function parentescos(): array
+    {
+        return [
+            'MADRE' => 'Madre',
+            'PADRE' => 'Padre',
+            'ABUELA' => 'Abuela',
+            'ABUELO' => 'Abuelo',
+            'TIA' => 'Tía',
+            'TIO' => 'Tío',
+            'HERMANA' => 'Hermana',
+            'HERMANO' => 'Hermano',
+            'TUTOR' => 'Tutor/a legal',
+            'OTRO' => 'Otro',
         ];
     }
 

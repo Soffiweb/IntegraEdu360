@@ -72,7 +72,10 @@
                 <a class="btn" href="{{ route('admin.paralelos.index') }}">Limpiar</a>
             </form>
 
-            <button class="btn btn-primary" type="button" data-open-create>Nuevo paralelo</button>
+            <div class="actions">
+                <a class="btn" href="{{ route('admin.paralelos.pdf', request()->only(['search', 'institucion', 'curso_id', 'estado'])) }}" target="_blank" rel="noopener"><i class="fa-solid fa-file-pdf" aria-hidden="true"></i> Reporte PDF</a>
+                <button class="btn btn-primary" type="button" data-open-create>Nuevo paralelo</button>
+            </div>
         </div>
 
         @if ($totalParalelos > 0)
@@ -84,6 +87,8 @@
                             <th>Institucion</th>
                         @endif
                         <th>Capacidad</th>
+                        <th>Matriculados</th>
+                        <th>Tutor</th>
                         <th>Estado</th>
                         <th>Acciones</th>
                     </tr>
@@ -91,14 +96,14 @@
                 <tbody>
                     @foreach ($paralelosAgrupados as $especialidadNombre => $porCurso)
                         <tr>
-                            <td colspan="{{ $institucionActiva ? 4 : 5 }}" style="background:var(--navy-50,#eef1fb);padding:8px 14px;font-weight:700;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--navy-700,#152b74);border-bottom:2px solid var(--navy-100,#ccd4f1);">
+                            <td colspan="{{ $institucionActiva ? 6 : 7 }}" style="background:var(--navy-50,#eef1fb);padding:8px 14px;font-weight:700;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--navy-700,#152b74);border-bottom:2px solid var(--navy-100,#ccd4f1);">
                                 {{ $especialidadNombre }}
                                 <span style="font-weight:400;color:var(--muted,#64748b);margin-left:8px;">{{ $porCurso->flatten()->count() }} {{ $porCurso->flatten()->count() === 1 ? 'paralelo' : 'paralelos' }}</span>
                             </td>
                         </tr>
                         @foreach ($porCurso as $cursoNombre => $grupoParalelos)
                             <tr>
-                                <td colspan="{{ $institucionActiva ? 4 : 5 }}" style="background:var(--base-100,#f8f9fb);padding:6px 14px 6px 28px;font-weight:600;font-size:12px;color:var(--base-content,#303237);border-bottom:1px solid var(--base-200,#e5e7eb);">
+                                <td colspan="{{ $institucionActiva ? 6 : 7 }}" style="background:var(--base-100,#f8f9fb);padding:6px 14px 6px 28px;font-weight:600;font-size:12px;color:var(--base-content,#303237);border-bottom:1px solid var(--base-200,#e5e7eb);">
                                     {{ $cursoNombre }}
                                     @php $primerCurso = $grupoParalelos->first()?->curso; @endphp
                                     @if ($primerCurso)
@@ -115,6 +120,8 @@
                                         <td>{{ $paralelo->curso?->institucion?->nombre ?: 'Sin institucion' }}</td>
                                     @endif
                                     <td>{{ $paralelo->capacidad }} alumnos</td>
+                                    <td aria-label="Matrículas aún no disponibles">—</td>
+                                    <td>{{ $paralelo->tutor ? ($paralelo->tutor->persona ? $paralelo->tutor->nombre_completo : $paralelo->tutor->username) : 'Sin asignar' }}</td>
                                     <td><span class="badge badge-{{ strtolower($paralelo->estado) }}">{{ $estados[$paralelo->estado] ?? $paralelo->estado }}</span></td>
                                     <td>
                                         <div class="actions">
@@ -208,6 +215,18 @@
                         <label for="create_capacidad">Capacidad (alumnos)</label>
                         <input id="create_capacidad" class="input" type="number" name="capacidad" value="{{ old('capacidad', 35) }}" min="1" max="100" required>
                     </div>
+                    <div class="field-group full">
+                        <label for="create_tutor_id">Tutor del paralelo</label>
+                        <select id="create_tutor_id" class="select" name="tutor_id">
+                            <option value="">Sin asignar</option>
+                            @foreach ($tutoresDisponibles as $tutor)
+                                <option value="{{ $tutor->id }}" @selected((string) old('tutor_id') === (string) $tutor->id)>{{ $tutor->persona ? $tutor->nombre_completo : $tutor->username }}</option>
+                            @endforeach
+                        </select>
+                        @error('tutor_id')
+                            <span role="alert">{{ $message }}</span>
+                        @enderror
+                    </div>
                     <div class="field-group">
                         <label for="create_estado">Estado</label>
                         <select id="create_estado" class="select" name="estado" required>
@@ -277,6 +296,18 @@
                         <div class="field-group">
                             <label for="edit_capacidad">Capacidad (alumnos)</label>
                             <input id="edit_capacidad" class="input" type="number" name="capacidad" value="{{ old('capacidad', $paraleloEditando->capacidad) }}" min="1" max="100" required>
+                        </div>
+                        <div class="field-group full">
+                            <label for="edit_tutor_id">Tutor del paralelo</label>
+                            <select id="edit_tutor_id" class="select" name="tutor_id">
+                                <option value="">Sin asignar</option>
+                                @foreach ($tutoresDisponibles as $tutor)
+                                    <option value="{{ $tutor->id }}" @selected((string) old('tutor_id', $paraleloEditando->tutor_id) === (string) $tutor->id)>{{ $tutor->persona ? $tutor->nombre_completo : $tutor->username }}</option>
+                                @endforeach
+                            </select>
+                            @error('tutor_id')
+                                <span role="alert">{{ $message }}</span>
+                            @enderror
                         </div>
                         <div class="field-group">
                             <label for="edit_estado">Estado</label>

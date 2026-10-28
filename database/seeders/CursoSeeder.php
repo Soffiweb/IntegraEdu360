@@ -8,9 +8,11 @@ use Illuminate\Database\Seeder;
 
 class CursoSeeder extends Seeder
 {
-    public function run(): void
+    public function run(?int $institucionId = null, bool $soloEgb = false): void
     {
-        $instituciones = Institucion::query()->orderBy('id')->get();
+        $instituciones = Institucion::query()
+            ->when($institucionId !== null, fn ($query) => $query->whereKey($institucionId))
+            ->orderBy('id')->get();
 
         if ($instituciones->isEmpty()) {
             throw new \RuntimeException('No existe ninguna institucion para asociar los cursos del seeder.');
@@ -20,8 +22,20 @@ class CursoSeeder extends Seeder
 
         foreach ($instituciones as $institucion) {
             foreach ($catalogo as $curso) {
+                if ($soloEgb && $curso['grado'] > 10) {
+                    continue;
+                }
+
+                if ($curso['grado'] === 1) {
+                    Curso::query()->where('institucion_id', $institucion->id)
+                        ->whereNull('especialidad_id')->where('grado', 1)
+                        ->where('nivel', 'BASICA_ELEMENTAL')
+                        ->update(['nivel' => 'PREPARATORIA']);
+                }
+
                 $existe = Curso::query()
                     ->where('institucion_id', $institucion->id)
+                    ->whereNull('especialidad_id')
                     ->where('nivel', $curso['nivel'])
                     ->where('grado', $curso['grado'])
                     ->exists();
@@ -42,8 +56,9 @@ class CursoSeeder extends Seeder
     private function catalogoCursos(): array
     {
         return [
+            // Preparatoria
+            ['nombre' => 'Primero de Básica',    'nivel' => 'PREPARATORIA', 'grado' => 1],
             // Básica Elemental
-            ['nombre' => 'Primero de Básica',    'nivel' => 'BASICA_ELEMENTAL', 'grado' => 1],
             ['nombre' => 'Segundo de Básica',    'nivel' => 'BASICA_ELEMENTAL', 'grado' => 2],
             ['nombre' => 'Tercero de Básica',    'nivel' => 'BASICA_ELEMENTAL', 'grado' => 3],
             ['nombre' => 'Cuarto de Básica',     'nivel' => 'BASICA_ELEMENTAL', 'grado' => 4],

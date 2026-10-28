@@ -1,0 +1,54 @@
+.hero.usuarios-hero {
+    box-sizing: border-box;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4px 16px;
+    min-height: 60px;
+    padding: 12px 16px;
+    margin-bottom: 12px;
+}
+
+.usuarios-hero h2 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.stats.usuarios-stats {
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.usuarios-stats .card {
+    box-sizing: border-box;
+    min-height: 80px;
+    padding: 10px 10px 10px 11px;
+}
+
+.usuarios-stats .metric {
+    font-size: 1.5rem;
+    margin-bottom: 3px;
+}
+
+.select.usuarios-roles {
+    height: auto;
+    min-height: 220px;
+    padding: 8px;
+    background-image: none;
+}
+
+.usuarios-roles option {
+    padding: 6px 10px;
+}
+
+#edit-user-modal[open] {
+    position: fixed;
+    inset: 0;
+    max-height: calc(100vh - 32px);
+    margin: auto;
+    overflow-y: auto;
+    z-index: 1000;
+}

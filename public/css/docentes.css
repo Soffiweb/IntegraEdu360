@@ -1,0 +1,34 @@
+.main:has(.docentes-view) { padding-top: 12px; }
+.page:has(.docentes-view) > .topbar { min-height: 44px; margin-bottom: 8px; padding: 4px 16px; box-sizing: border-box; max-height: 56px; overflow: auto; }
+.docentes-top { max-height: calc(40vh - 84px); max-height: calc(40dvh - 84px); overflow-y: auto; margin-bottom: 8px; }
+.docentes-header { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 6px; }
+.docentes-header h2 { margin: 0 0 4px; font-size: 20px; }
+.docentes-header p { margin: 0; color: var(--muted); font-size: 13px; }
+.docentes-summary { display: flex; flex-wrap: wrap; gap: 8px 20px; margin-bottom: 8px; color: var(--muted); font-size: 12px; }
+.docentes-summary strong { color: var(--base-content); font-variant-numeric: tabular-nums; }
+.docentes-view .panel { padding: 16px; }
+.docentes-view .section-title { margin-bottom: 10px; }
+.docentes-view .section-title h2 { font-size: 15px; }
+.docentes-view .toolbar { margin-bottom: 4px; }
+.docentes-view .filters { flex: 1; align-items: center; gap: 8px; }
+.docentes-view .filters > input { flex: 1; min-width: 200px; }
+.docentes-view .filters .input, .docentes-view .filters .select { width: auto; min-height: 36px; padding: 7px 10px; }
+.docentes-view .filters > .select { flex: 0 1 auto; }
+.docentes-view .docentes-page-size .select { flex: none; }
+.docentes-page-size { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
+.docentes-table-scroll { overflow-x: auto; }
+.docentes-view th { padding: 9px 12px; }
+.docentes-view td { padding: 7px 12px; line-height: 1.35; }
+.docentes-view .name-cell strong { font-size: 13px; }
+.docentes-view .name-cell span, .docentes-view td > span { font-size: 11px; }
+.docentes-view td .actions { flex-wrap: nowrap; gap: 5px; }
+.docentes-view .btn.record-action { width: 32px; min-width: 32px; height: 32px; min-height: 32px; flex-basis: 32px; }
+.docentes-view .pager { align-items: center; gap: 8px; margin-top: 12px; }
+.docentes-range { margin-right: auto; color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+@media (max-width: 640px) {
+    .docentes-header { align-items: flex-start; flex-direction: column; }
+    .docentes-view .filters > input { flex-basis: 100%; min-width: 0; }
+    .docentes-view .panel { padding: 12px; }
+    .docentes-view td { padding: 5px 0; }
+    .docentes-range { width: 100%; }
+}

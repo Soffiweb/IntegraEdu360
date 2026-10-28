@@ -23,14 +23,18 @@
     <span>Administracion de usuarios</span>
 @endsection
 
+@section('head')
+    <link rel="stylesheet" href="{{ asset('css/admin-usuarios.css') }}">
+@endsection
+
 @section('content')
     @php
         $personaOldCreate = (string) old('persona_id');
         $personaOldEdit = $usuarioEditando ? (string) old('persona_id', $usuarioEditando->persona_id) : '';
     @endphp
 
-    <section class="hero" style="grid-template-columns: 1fr; display: block;">
-        <h2 style="margin: 0 0 6px; font-size: 22px; font-weight: 700; line-height: 1.2;">Gestion profesional de usuarios</h2>
+    <section class="hero usuarios-hero">
+        <h2>Gestion profesional de usuarios</h2>
         @if ($institucionActiva)
             <p style="margin: 0; color: rgba(255,255,255,0.65); font-size: 13px;">
                 Administra los usuarios registrados en <strong style="color: rgba(255,255,255,0.9);">{{ $institucionActiva->nombre }}</strong>
@@ -40,7 +44,7 @@
         @endif
     </section>
 
-    <section class="stats">
+    <section class="stats usuarios-stats">
         <article class="card"><strong class="metric">{{ $metricas['total'] }}</strong><span>Registros en usuarios</span></article>
         <article class="card"><strong class="metric">{{ $metricas['activos'] }}</strong><span>Usuarios activos</span></article>
         <article class="card"><strong class="metric">{{ $metricas['observacion'] }}</strong><span>En observacion</span></article>
@@ -156,14 +160,14 @@
 
 @section('dialogs')
     @if ($usuarioEditando)
-        <dialog class="modal" id="edit-user-modal">
+        <dialog class="modal" id="edit-user-modal" open>
             <div class="modal-card">
                 <div class="modal-header">
                     <div>
                         <h3>Editar usuario</h3>
                         <span>Actualice datos, roles y estado del usuario seleccionado.</span>
                     </div>
-                    <button class="btn" type="button" data-close-edit>x</button>
+                    <a class="btn" href="{{ route('admin.usuarios.index', request()->except('edit')) }}" aria-label="Cerrar edición">x</a>
                 </div>
 
                 @if ($errors->any())
@@ -234,7 +238,7 @@
                         </div>
                         <div class="field-group">
                             <label for="edit_rol_ids">Roles</label>
-                            <select id="edit_rol_ids" class="select" name="rol_ids[]" multiple size="4" required>
+                            <select id="edit_rol_ids" class="select usuarios-roles" name="rol_ids[]" multiple size="8" required>
                                 @foreach ($roles as $rol)
                                     <option value="{{ $rol->id }}" @selected(in_array((string) $rol->id, $rolesSeleccionados, true))>{{ $rol->nombre }}</option>
                                 @endforeach
@@ -339,7 +343,7 @@
                     </div>
                     <div class="field-group">
                         <label for="create_rol_ids">Roles</label>
-                        <select id="create_rol_ids" class="select" name="rol_ids[]" multiple size="4" required>
+                        <select id="create_rol_ids" class="select usuarios-roles" name="rol_ids[]" multiple size="8" required>
                             @foreach ($roles as $rol)
                                 <option value="{{ $rol->id }}" @selected(in_array((string) $rol->id, collect(old('rol_ids', []))->map(fn ($id) => (string) $id)->all(), true))>{{ $rol->nombre }}</option>
                             @endforeach
@@ -583,6 +587,7 @@
         });
 
         if (__cfg.autoOpenEdit) {
+            editModal?.close();
             editModal?.showModal();
         }
 

@@ -176,7 +176,7 @@
                             @foreach ($docentes as $docente)
                                 @php
                                     $persona = $docente->persona;
-                                    $nombre = trim(implode(' ', array_filter([$persona?->primer_nombre, $persona?->segundo_nombre, $persona?->primer_apellido, $persona?->segundo_apellido])));
+                                    $nombre = trim(implode(' ', array_filter([$persona?->tratamiento, $persona?->primer_nombre, $persona?->segundo_nombre, $persona?->primer_apellido, $persona?->segundo_apellido])));
                                 @endphp
                                 <tr>
                                     <td class="name-cell"><strong>{{ $nombre !== '' ? $nombre : 'Docente sin nombre cargado' }}</strong><span>ID: {{ $persona?->numero_identificacion ?: 'Sin cedula' }} | {{ $persona?->email ?: ($docente->email ?: 'Sin correo') }}</span></td>
@@ -185,6 +185,7 @@
                                     <td><span class="badge badge-{{ strtolower($docente->estado) }}">{{ $estados[$docente->estado] ?? $docente->estado }}</span></td>
                                     <td>
                                         <div class="actions">
+                                    <button class="btn mini-btn record-action" type="button" data-open-datos="datos-docente-{{ $docente->id }}" aria-label="Ver datos del docente" title="Ver datos"><i class="fa-solid fa-eye" aria-hidden="true"></i></button>
                                             <a class="btn" href="{{ route('superusuario.docentes.index', array_filter(['edit' => $docente->id, 'search' => request('search'), 'institucion' => request('institucion'), 'estado' => request('estado')])) }}">Editar</a>
                                             <form method="POST" action="{{ route('superusuario.docentes.destroy', $docente) }}" onsubmit="return confirm('Desea eliminar este docente?');">
                                                 @csrf
@@ -208,6 +209,8 @@
             </section>
         </main>
     </div>
+
+    @include('admin.docentes.partials.datos')
     <dialog class="modal" id="create-docente-modal">
         <div class="modal-card">
             <div class="modal-header">
@@ -225,6 +228,10 @@
                 <div class="form-grid">
                     <div class="field-group"><label for="create_numero_identificacion">Numero de identificacion</label><input id="create_numero_identificacion" class="input" type="text" name="numero_identificacion" value="{{ old('numero_identificacion') }}" required></div>
                     <div class="field-group"><label for="create_institucion_id">Institucion</label><select id="create_institucion_id" class="select" name="institucion_id" required><option value="">Seleccione</option>@foreach ($instituciones as $institucion)<option value="{{ $institucion->id }}" @selected((string) old('institucion_id') === (string) $institucion->id)>{{ $institucion->nombre }}</option>@endforeach</select></div>
+                    <div class="field-group">
+                        <label for="create_tratamiento">Título o tratamiento</label>
+                        <input id="create_tratamiento" class="input" type="text" name="tratamiento" value="{{ old('tratamiento') }}" maxlength="120" placeholder="Ej.: Lic., Ing., Mgtr.">
+                    </div>
                     <div class="field-group"><label for="create_primer_nombre">Primer nombre</label><input id="create_primer_nombre" class="input" type="text" name="primer_nombre" value="{{ old('primer_nombre') }}" required></div>
                     <div class="field-group"><label for="create_segundo_nombre">Segundo nombre</label><input id="create_segundo_nombre" class="input" type="text" name="segundo_nombre" value="{{ old('segundo_nombre') }}"></div>
                     <div class="field-group"><label for="create_primer_apellido">Primer apellido</label><input id="create_primer_apellido" class="input" type="text" name="primer_apellido" value="{{ old('primer_apellido') }}" required></div>
@@ -265,6 +272,10 @@
                     <div class="form-grid">
                         <div class="field-group"><label for="edit_numero_identificacion">Numero de identificacion</label><input id="edit_numero_identificacion" class="input" type="text" name="numero_identificacion" value="{{ old('numero_identificacion', $personaEditando?->numero_identificacion) }}" required></div>
                         <div class="field-group"><label for="edit_institucion_id">Institucion</label><select id="edit_institucion_id" class="select" name="institucion_id" required><option value="">Seleccione</option>@foreach ($instituciones as $institucion)<option value="{{ $institucion->id }}" @selected((string) old('institucion_id', $docenteEditando->institucion_id) === (string) $institucion->id)>{{ $institucion->nombre }}</option>@endforeach</select></div>
+                        <div class="field-group">
+                            <label for="edit_tratamiento">Título o tratamiento</label>
+                            <input id="edit_tratamiento" class="input" type="text" name="tratamiento" value="{{ old('tratamiento', $personaEditando?->tratamiento) }}" maxlength="120" placeholder="Ej.: Lic., Ing., Mgtr.">
+                        </div>
                         <div class="field-group"><label for="edit_primer_nombre">Primer nombre</label><input id="edit_primer_nombre" class="input" type="text" name="primer_nombre" value="{{ old('primer_nombre', $personaEditando?->primer_nombre) }}" required></div>
                         <div class="field-group"><label for="edit_segundo_nombre">Segundo nombre</label><input id="edit_segundo_nombre" class="input" type="text" name="segundo_nombre" value="{{ old('segundo_nombre', $personaEditando?->segundo_nombre) }}"></div>
                         <div class="field-group"><label for="edit_primer_apellido">Primer apellido</label><input id="edit_primer_apellido" class="input" type="text" name="primer_apellido" value="{{ old('primer_apellido', $personaEditando?->primer_apellido) }}" required></div>
@@ -291,6 +302,12 @@
         </dialog>
     @endif
     <script>
+        document.querySelectorAll('[data-open-datos]').forEach((button) => {
+            button.addEventListener('click', () => document.getElementById(button.dataset.openDatos)?.showModal());
+        });
+        document.querySelectorAll('[data-close-datos]').forEach((button) => {
+            button.addEventListener('click', () => button.closest('dialog')?.close());
+        });
         const createModal = document.getElementById('create-docente-modal');
         const editModal = document.getElementById('edit-docente-modal');
         document.querySelectorAll('[data-open-create]').forEach((button) => button.addEventListener('click', () => createModal?.showModal()));

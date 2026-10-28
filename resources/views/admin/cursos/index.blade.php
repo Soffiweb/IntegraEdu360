@@ -24,22 +24,22 @@
 @endsection
 
 @section('content')
-    <section class="hero" style="display:block;">
-        <h2 style="margin:0 0 6px;font-size:22px;font-weight:700;line-height:1.2;">Administración de Cursos</h2>
+    <section class="hero" style="display:block;padding:8px 16px;margin-bottom:12px;">
+        <h2 style="margin:0 0 3px;font-size:16px;font-weight:700;line-height:1.2;">Administración de Cursos</h2>
         @if ($institucionActiva)
-            <p style="margin:0;color:rgba(255,255,255,.65);font-size:13px;">
+            <p style="margin:0;color:rgba(255,255,255,.65);font-size:12px;line-height:1.4;">
                 Gestiona los cursos de <strong style="color:rgba(255,255,255,.9);">{{ $institucionActiva->nombre }}</strong>
             </p>
         @else
-            <p style="margin:0;color:rgba(255,255,255,.65);font-size:13px;">Gestiona los cursos de todas las instituciones disponibles.</p>
+            <p style="margin:0;color:rgba(255,255,255,.65);font-size:12px;line-height:1.4;">Gestiona los cursos de todas las instituciones disponibles.</p>
         @endif
     </section>
 
     <section class="stats">
-        <article class="card"><strong class="metric">{{ $metricas['total'] }}</strong><span>Total cursos</span></article>
-        <article class="card"><strong class="metric">{{ $metricas['activos'] }}</strong><span>Activos</span></article>
-        <article class="card"><strong class="metric">{{ $metricas['inactivos'] }}</strong><span>Inactivos</span></article>
-        <article class="card"><strong class="metric">{{ $metricas['niveles'] }}</strong><span>Niveles distintos</span></article>
+        <article class="card" style="min-height:80px;padding:8px 20px 8px 22px;"><strong class="metric">{{ $metricas['total'] }}</strong><span>Total cursos</span></article>
+        <article class="card" style="min-height:80px;padding:8px 20px 8px 22px;"><strong class="metric">{{ $metricas['activos'] }}</strong><span>Activos</span></article>
+        <article class="card" style="min-height:80px;padding:8px 20px 8px 22px;"><strong class="metric">{{ $metricas['inactivos'] }}</strong><span>Inactivos</span></article>
+        <article class="card" style="min-height:80px;padding:8px 20px 8px 22px;"><strong class="metric">{{ $metricas['niveles'] }}</strong><span>Niveles distintos</span></article>
     </section>
 
     <section class="panel">

@@ -120,8 +120,8 @@ class AsignaturaController extends Controller
             'institucionActiva'  => $institucionActiva,
             'especialidades'     => $especialidades,
             'cursos'             => $cursos,
-            'areas'              => $this->areas(),
-            'estados'            => $this->estados(),
+            'areas' => $this->areas(),
+            'estados' => $this->estados(),
             'niveles'            => $this->niveles(),
             'metricas'           => [
                 'total'      => (clone $metricasQuery)->count(),
@@ -184,25 +184,15 @@ class AsignaturaController extends Controller
             'totalAsignaturas'     => $asignaturasList->count(),
             'institucion'          => $institucionActiva,
             'anioLectivo'          => $anioLectivo,
-            'areas'                => $this->areas(),
-            'estados'              => $this->estados(),
+            'areas' => $this->areas(),
+            'estados' => $this->estados(),
             'generadoEn'           => now()->format('d/m/Y H:i'),
-        ])->setPaper('letter', 'portrait');
+        ])->setPaper('a4', 'portrait');
 
+        $pdf->render();
         $domPdf = $pdf->getDomPDF();
-        $domPdf->render();
-
-        $canvas = $domPdf->getCanvas();
-        $fontMetrics = $domPdf->getFontMetrics();
-        $font = $fontMetrics->getFont('DejaVu Sans', 'normal');
-        $fontSize = 7.5;
-        $pageText = 'Pagina 999 de 999';
-        $textWidth = $fontMetrics->getTextWidth($pageText, $font, $fontSize);
-        $x = $canvas->get_width() - 42 - $textWidth;
-        $y = $canvas->get_height() - 32;
-        $color = [0.392, 0.455, 0.545];
-
-        $canvas->page_text($x, $y, 'Pagina {PAGE_NUM} de {PAGE_COUNT}', $font, $fontSize, $color);
+        $font = $domPdf->getFontMetrics()->getFont('DejaVu Sans', 'normal');
+        $domPdf->getCanvas()->page_text(510, 814, 'Pagina {PAGE_NUM} de {PAGE_COUNT}', $font, 6, [0.39, 0.45, 0.51]);
 
         return $pdf->download($filename);
     }

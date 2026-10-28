@@ -27,28 +27,33 @@
     <span>Administracion de alumnos</span>
 @endsection
 
+@section('head')
+    <link rel="stylesheet" href="{{ asset('css/alumnos.css') }}">
+@endsection
+
 @section('content')
-    <section class="hero" style="display: block;">
-        <h2 style="margin: 0 0 6px; font-size: 22px; font-weight: 700; line-height: 1.2;">Administración de Alumnos</h2>
-        @if ($institucionActiva)
-            <p style="margin: 0; color: rgba(255,255,255,0.65); font-size: 13px;">
-                Gestiona el alumnado de <strong style="color: rgba(255,255,255,0.9);">{{ $institucionActiva->nombre }}</strong>
-            </p>
-        @else
-            <p style="margin: 0; color: rgba(255,255,255,0.65); font-size: 13px;">Gestiona el alumnado de todas las instituciones disponibles.</p>
-        @endif
-    </section>
-
-    <section class="stats">
-        <article class="card"><strong class="metric">{{ $metricas['total'] }}</strong><span>Total alumnos</span></article>
-        <article class="card"><strong class="metric">{{ $metricas['activos'] }}</strong><span>Activos</span></article>
-        <article class="card"><strong class="metric">{{ $metricas['observacion'] }}</strong><span>En observacion</span></article>
-        <article class="card"><strong class="metric">{{ $metricas['inactivos'] }}</strong><span>Inactivos</span></article>
-    </section>
-
+    <div class="alumnos-view">
     <section class="panel">
+    <div class="alumnos-top">
+        <header class="alumnos-header">
+            <div>
+                <h2>Administración de alumnos</h2>
+                <p>{{ $institucionActiva?->nombre ?? 'Todas las instituciones' }}</p>
+            </div>
+            <div class="actions">
+                <a class="btn" href="{{ route('admin.estudiantes.excel', request()->only(['search', 'estado', 'institucion'])) }}"><i class="fa-solid fa-file-excel" aria-hidden="true"></i> Exportar a Excel</a>
+                <button class="btn btn-primary" type="button" data-open-create><i class="fa-solid fa-plus" aria-hidden="true"></i> Nuevo alumno</button>
+            </div>
+        </header>
+        <div class="alumnos-summary" aria-label="Resumen de alumnos">
+            <span><strong>{{ $metricas['total'] }}</strong> alumnos</span>
+            <span><strong>{{ $metricas['activos'] }}</strong> activos</span>
+            <span><strong>{{ $metricas['observacion'] }}</strong> en observación</span>
+            <span><strong>{{ $metricas['inactivos'] }}</strong> inactivos</span>
+        </div>
+
         <div class="section-title">
-            <h2>Listado operativo</h2>
+            <h2>Listado de alumnos</h2>
             <span>{{ $estudiantes->total() }} resultados</span>
         </div>
 
@@ -73,12 +78,20 @@
                         <option value="{{ $value }}" @selected(request('estado') === $value)>{{ $label }}</option>
                     @endforeach
                 </select>
+                <label class="alumnos-page-size" for="alumnos-per-page">Mostrar
+                    <select id="alumnos-per-page" class="select" name="per_page">
+                        @foreach ([25, 50, 100] as $cantidad)
+                            <option value="{{ $cantidad }}" @selected($estudiantes->perPage() === $cantidad)>{{ $cantidad }}</option>
+                        @endforeach
+                    </select>
+                </label>
                 <button class="btn" type="submit">Filtrar</button>
                 <a class="btn" href="{{ route('admin.estudiantes.index') }}">Limpiar</a>
             </form>
 
-            <button class="btn btn-primary" type="button" data-open-create>Nuevo alumno</button>
         </div>
+
+    </div>
 
         @if ($estudiantes->count())
             <table>
@@ -102,6 +115,7 @@
                         <tr>
                             <td class="name-cell">
                                 <strong>{{ $nombre !== '' ? $nombre : 'Alumno sin nombre cargado' }}</strong>
+                                <span>Representante: {{ $estudiante->representante?->nombre_completo ?: 'Sin representante' }}</span>
                                 <span>ID: {{ $persona?->numero_identificacion ?: 'Sin cedula' }} | {{ $persona?->email ?: ($estudiante->email ?: 'Sin correo') }}</span>
                             </td>
                             @if (! $institucionActiva)
@@ -115,7 +129,8 @@
                             <td><span class="badge badge-{{ strtolower($estudiante->estado) }}">{{ $estados[$estudiante->estado] ?? $estudiante->estado }}</span></td>
                             <td>
                                 <div class="actions">
-                                    <a class="btn mini-btn record-action" href="{{ route('admin.estudiantes.index', array_filter(['edit' => $estudiante->id, 'search' => request('search'), 'institucion' => request('institucion'), 'estado' => request('estado')])) }}" aria-label="Editar registro" title="Editar"><i class="fa-solid fa-pen-to-square" aria-hidden="true"></i></a>
+                                    <button class="btn mini-btn record-action" type="button" data-open-datos="datos-alumno-{{ $estudiante->id }}" aria-label="Ver datos del alumno" title="Ver datos"><i class="fa-solid fa-eye" aria-hidden="true"></i></button>
+                                    <a class="btn mini-btn record-action" href="{{ route('admin.estudiantes.index', array_filter(['edit' => $estudiante->id, 'search' => request('search'), 'institucion' => request('institucion'), 'estado' => request('estado'), 'per_page' => $estudiantes->perPage(), 'page' => request('page')])) }}" aria-label="Editar registro" title="Editar"><i class="fa-solid fa-pen-to-square" aria-hidden="true"></i></a>
                                     <form method="POST" action="{{ route('admin.estudiantes.destroy', $estudiante) }}" onsubmit="return confirm('Desea eliminar este alumno?');">
                                         @csrf
                                         @method('DELETE')
@@ -129,6 +144,7 @@
             </table>
 
             <div class="pager">
+                <span class="alumnos-range">{{ $estudiantes->firstItem() }}–{{ $estudiantes->lastItem() }} de {{ $estudiantes->total() }} alumnos</span>
                 @if ($estudiantes->onFirstPage())
                     <span class="btn">Anterior</span>
                 @else
@@ -147,9 +163,11 @@
             <div class="empty">No hay alumnos con los filtros actuales.</div>
         @endif
     </section>
+    </div>
 @endsection
 
 @section('dialogs')
+    @include('admin.estudiantes.partials.datos')
     <dialog class="modal" id="create-estudiante-modal">
         <div class="modal-card">
             <div class="modal-header">
@@ -195,6 +213,28 @@
                             </select>
                         </div>
                     @endif
+                    <div class="field-group full">
+                        <label for="create_representante_id">Representante</label>
+                        <select id="create_representante_id" class="select" name="representante_id" required>
+                            <option value="">Seleccione un representante</option>
+                            @foreach ($representantesDisponibles as $representante)
+                                <option value="{{ $representante->id }}" @selected((string) old('representante_id') === (string) $representante->id)>{{ $representante->nombre_completo }} — {{ $representante->persona?->numero_identificacion }}</option>
+                            @endforeach
+                        </select>
+                        <span>Si no existe, créelo primero en <a href="{{ route('admin.representantes.index') }}">Administración de representantes</a>.</span>
+                    </div>
+                    <div class="field-group">
+                        <label for="create_parentesco_representante">Parentesco del representante</label>
+                        <select id="create_parentesco_representante" class="select" name="parentesco_representante" required>
+                            <option value="">Seleccione el parentesco</option>
+                            @foreach ($parentescos as $valor => $etiqueta)
+                                <option value="{{ $valor }}" @selected(old('parentesco_representante') === $valor)>{{ $etiqueta }}</option>
+                            @endforeach
+                        </select>
+                        @error('parentesco_representante')
+                            <span role="alert">{{ $message }}</span>
+                        @enderror
+                    </div>
                     <div class="field-group">
                         <label for="create_primer_nombre">Primer nombre</label>
                         <input id="create_primer_nombre" class="input" type="text" name="primer_nombre" value="{{ old('primer_nombre') }}" required>
@@ -335,6 +375,28 @@
                                 </select>
                             </div>
                         @endif
+                        <div class="field-group full">
+                            <label for="edit_representante_id">Representante</label>
+                            <select id="edit_representante_id" class="select" name="representante_id" required>
+                                <option value="">Seleccione un representante</option>
+                                @foreach ($representantesDisponibles as $representante)
+                                    <option value="{{ $representante->id }}" @selected((string) old('representante_id', $estudianteEditando->representante_id) === (string) $representante->id)>{{ $representante->nombre_completo }} — {{ $representante->persona?->numero_identificacion }}</option>
+                                @endforeach
+                            </select>
+                            <span>Si no existe, créelo primero en <a href="{{ route('admin.representantes.index') }}">Administración de representantes</a>.</span>
+                        </div>
+                        <div class="field-group">
+                            <label for="edit_parentesco_representante">Parentesco del representante</label>
+                            <select id="edit_parentesco_representante" class="select" name="parentesco_representante" required>
+                                <option value="">Seleccione el parentesco</option>
+                                @foreach ($parentescos as $valor => $etiqueta)
+                                    <option value="{{ $valor }}" @selected(old('parentesco_representante', $estudianteEditando->parentesco_representante) === $valor)>{{ $etiqueta }}</option>
+                                @endforeach
+                            </select>
+                            @error('parentesco_representante')
+                                <span role="alert">{{ $message }}</span>
+                            @enderror
+                        </div>
                         <div class="field-group">
                             <label for="edit_primer_nombre">Primer nombre</label>
                             <input id="edit_primer_nombre" class="input" type="text" name="primer_nombre" value="{{ old('primer_nombre', $personaEditando?->primer_nombre) }}" required>
@@ -432,6 +494,15 @@
 
 @section('scripts')
     <script>
+        document.querySelectorAll('[data-open-datos]').forEach((button) => {
+            button.addEventListener('click', () => document.getElementById(button.dataset.openDatos)?.showModal());
+        });
+        document.querySelectorAll('[data-close-datos]').forEach((button) => {
+            button.addEventListener('click', () => button.closest('dialog')?.close());
+        });
+        document.getElementById('alumnos-per-page')?.addEventListener('change', (event) => {
+            event.target.form.requestSubmit();
+        });
         const createModal = document.getElementById('create-estudiante-modal');
         const editModal = document.getElementById('edit-estudiante-modal');
 

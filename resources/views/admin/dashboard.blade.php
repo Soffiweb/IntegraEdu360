@@ -8,7 +8,7 @@
     <span>Resumen Ejecutivo</span>
 @endsection
 @section('head')
-    <link href="{{ asset('css/admin-resumen.css') }}" rel="stylesheet">
+    <link href="{{ asset('css/admin-resumen.css') }}?v={{ filemtime(public_path('css/admin-resumen.css')) }}" rel="stylesheet">
 @endsection
 @section('topbar-action')
     <a class="btn resumen-refresh" href="{{ route('admin.resumen.index') }}" aria-label="Actualizar resumen" title="Actualizar resumen"><i class="fa-solid fa-rotate-right" aria-hidden="true"></i></a>

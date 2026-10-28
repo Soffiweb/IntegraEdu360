@@ -43,6 +43,7 @@ class CursoController extends Controller
 
         $cursosList = $query
             ->orderByRaw("CASE nivel
+                WHEN 'PREPARATORIA' THEN 0
                 WHEN 'BASICA_ELEMENTAL' THEN 1
                 WHEN 'BASICA_MEDIA' THEN 2
                 WHEN 'BASICA_SUPERIOR' THEN 3
@@ -176,7 +177,8 @@ class CursoController extends Controller
     private function niveles(): array
     {
         return [
-            'BASICA_ELEMENTAL' => 'Básica Elemental (1ro - 4to)',
+            'PREPARATORIA' => 'Preparatoria (1ro)',
+            'BASICA_ELEMENTAL' => 'Básica Elemental (2do - 4to)',
             'BASICA_MEDIA' => 'Básica Media (5to - 7mo)',
             'BASICA_SUPERIOR' => 'Básica Superior (8vo - 10mo)',
             'BACHILLERATO' => 'Bachillerato (1ro - 3ro)',

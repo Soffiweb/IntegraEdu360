@@ -1,0 +1,25 @@
+.main:has(.alumnos-view) { padding-top: 12px; }
+.page:has(.alumnos-view) > .topbar { min-height: 44px; margin-bottom: 8px; padding: 4px 16px; box-sizing: border-box; max-height: 56px; overflow: auto; }
+.alumnos-top { max-height: calc(40vh - 84px); max-height: calc(40dvh - 84px); overflow-y: auto; margin-bottom: 8px; }
+.alumnos-header { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 6px; }
+.alumnos-header h2 { margin: 0 0 4px; font-size: 20px; }
+.alumnos-header p { margin: 0; color: var(--muted); font-size: 13px; }
+.alumnos-summary { display: flex; flex-wrap: wrap; gap: 8px 20px; margin-bottom: 8px; color: var(--muted); font-size: 12px; }
+.alumnos-summary strong { color: var(--base-content); font-variant-numeric: tabular-nums; }
+.alumnos-view .panel { padding: 16px; }
+.alumnos-view .section-title { margin-bottom: 10px; }
+.alumnos-view .section-title h2 { font-size: 15px; }
+.alumnos-view .toolbar { margin-bottom: 4px; min-width: 0; overflow-x: auto; }
+.alumnos-view .filters { flex: 1 0 auto; width: 100%; box-sizing: border-box; flex-wrap: nowrap; align-items: center; gap: 8px; }
+.alumnos-view .filters > .input { flex: 1 1 240px; width: auto; min-width: 200px; }
+.alumnos-view .filters > .select { flex: 0 0 auto; width: auto; max-width: 240px; }
+.alumnos-view .filters > .btn { flex: 0 0 auto; }
+@media (max-width: 640px) {
+    .alumnos-header { align-items: flex-start; flex-direction: column; }
+    .alumnos-view .panel { padding: 12px; }
+}
+
+.alumnos-page-size { display: flex; flex: 0 0 auto; align-items: center; gap: 6px; color: var(--muted); font-size: 12px; white-space: nowrap; }
+.alumnos-view .alumnos-page-size .select { width: auto; }
+.alumnos-view .pager { align-items: center; }
+.alumnos-range { margin-right: auto; color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
