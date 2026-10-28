@@ -32,3 +32,4 @@ desktop.ini
 *.userosscache
 *.sln.docstates
 .claude/settings.local.json
+/storage/framework/*.lock
