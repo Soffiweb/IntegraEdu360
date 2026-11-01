@@ -25,11 +25,3 @@
 .datos-campos .sw-hint-error, .datos-personales .sw-alert-error { color: var(--er, #E11D48); }
 .datos-formulario button { padding: 10px 16px; border: 0; border-radius: .5rem; background: var(--p, #28449a); color: var(--btn-text, #fdfdff); cursor: pointer; }
 
-.asistencia-personal input, .asistencia-personal select { padding: 8px; border: 1px solid var(--s, #81a2cf); border-radius: .5rem; background: var(--bg, #fdfdff); color: var(--bc, #303237); font: inherit; }
-.asistencia-personal .distributivo-filtros select { max-width: 100%; }
-.asistencia-tabla th[scope="row"] { min-width: 220px; font-weight: 500; }
-.asistencia-tabla thead th { min-width: 65px; }
-.asistencia-tabla thead label { display: block; margin-bottom: 8px; }
-.asistencia-tabla td select { min-width: 125px; }
-.asistencia-guardar { margin-top: 20px; padding: 10px 16px; border: 0; border-radius: .5rem; background: var(--p, #28449a); color: var(--btn-text, #fdfdff); cursor: pointer; }
-.asistencia-personal .sw-alert-error { color: var(--er, #E11D48); }

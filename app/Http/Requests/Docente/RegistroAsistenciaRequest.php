@@ -29,12 +29,13 @@ class RegistroAsistenciaRequest extends FormRequest
         return [
             'periodo' => [$guardando ? 'required' : 'nullable', 'integer'],
             'carga' => [$guardando ? 'required' : 'nullable', 'integer'],
-            'semana' => [$guardando ? 'required' : 'nullable', 'date_format:Y-m-d'],
-            'sesiones' => [$guardando ? 'required' : 'exclude', 'array', 'max:168'],
-            'sesiones.*' => ['array:fecha,estudiantes'],
-            'sesiones.*.fecha' => ['nullable', 'date_format:Y-m-d'],
-            'sesiones.*.estudiantes' => ['required', 'array'],
-            'sesiones.*.estudiantes.*' => ['nullable', Rule::in(array_keys(AsistenciaEstudiante::ESTADOS))],
+            'fecha' => [$guardando ? 'required' : 'nullable', 'date_format:Y-m-d'],
+            'horas' => [$guardando ? 'required' : 'exclude', 'integer', 'min:1'],
+            'tema' => [$guardando ? 'nullable' : 'exclude', 'string', 'max:255'],
+            'estudiantes' => [$guardando ? 'required' : 'exclude', 'array'],
+            'estudiantes.*' => ['nullable', Rule::in(array_keys(AsistenciaEstudiante::ESTADOS))],
+            'observaciones' => [$guardando ? 'nullable' : 'exclude', 'array'],
+            'observaciones.*' => ['nullable', 'string', 'max:500'],
         ];
     }
 
@@ -48,27 +49,21 @@ class RegistroAsistenciaRequest extends FormRequest
             if (! $this->isMethod('put')) {
                 return;
             }
-            $entradas = $this->input('sesiones', []);
             $permitidos = $contexto['matriculas']->pluck('id')->map(fn ($id) => (string) $id)->all();
-            if (! $contexto['carga'] || count($entradas) !== $contexto['cantidad'] || ! count($permitidos)) {
-                $validator->errors()->add('sesiones', 'El registro debe corresponder a la carga semanal y tener estudiantes matriculados.');
+            $estados = $this->input('estudiantes', []);
+            $ids = array_map('strval', array_keys($estados));
+            if (! $contexto['carga'] || ! count($permitidos)) {
+                $validator->errors()->add('estudiantes', 'El registro debe corresponder a una carga con estudiantes matriculados.');
+            } elseif (array_diff($ids, $permitidos) || array_diff($permitidos, $ids)
+                || array_diff(array_map('strval', array_keys($this->input('observaciones', []))), $permitidos)) {
+                $validator->errors()->add('estudiantes', 'La lista de estudiantes cambió o contiene matrículas ajenas. Recargue la vista.');
             }
-            foreach ($entradas as $numero => $entrada) {
-                if (! ctype_digit((string) $numero) || (string) (int) $numero !== (string) $numero || (int) $numero < 1 || (int) $numero > $contexto['cantidad']) {
-                    $validator->errors()->add('sesiones', 'El número de períodos supera la carga semanal asignada.');
-                }
-                $ids = array_map('strval', array_keys($entrada['estudiantes'] ?? []));
-                if (array_diff($ids, $permitidos) || array_diff($permitidos, $ids)) {
-                    $validator->errors()->add('sesiones', 'La lista de estudiantes cambió o contiene matrículas ajenas. Recargue la vista.');
-                }
-                $fecha = $entrada['fecha'] ?? null;
-                $marcados = array_filter($entrada['estudiantes'] ?? []);
-                if (! $fecha && ($marcados || $contexto['sesiones']->get($numero)?->asistencias->isNotEmpty())) {
-                    $validator->errors()->add("sesiones.$numero.fecha", 'Seleccione la fecha de la clase antes de registrar asistencia.');
-                }
-                if ($fecha && ($fecha < $contexto['semana']->toDateString() || $fecha > $contexto['semana']->endOfWeek()->toDateString()
-                    || $fecha < $contexto['periodo']->fecha_inicio->toDateString() || $fecha > $contexto['periodo']->fecha_fin->toDateString())) {
-                    $validator->errors()->add("sesiones.$numero.fecha", 'La fecha debe pertenecer a esta semana y al período académico.');
+            if ((int) $this->input('horas') > $contexto['maxHoras']) {
+                $validator->errors()->add('horas', "La clase no puede durar más de {$contexto['maxHoras']} períodos según la carga semanal.");
+            }
+            foreach ($this->input('observaciones', []) as $matricula => $observacion) {
+                if (filled($observacion) && blank($estados[$matricula] ?? null)) {
+                    $validator->errors()->add("observaciones.$matricula", 'Marque la asistencia del estudiante antes de registrar una observación.');
                 }
             }
         }];

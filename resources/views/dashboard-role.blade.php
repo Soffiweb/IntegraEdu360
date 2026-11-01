@@ -17,8 +17,11 @@
     @if (in_array($dashboardSection ?? null, ['instituciones', 'zonas', 'distritos', 'roles', 'usuarios', 'resumen'], true))
         <link href="{{ asset('css/instituciones.css') }}" rel="stylesheet">
     @endif
-    @if (in_array($dashboardSection ?? null, ['distributivo-personal', 'horario-personal', 'estudiantes-curso', 'actualizar-datos', 'asistencia'], true))
+    @if (in_array($dashboardSection ?? null, ['distributivo-personal', 'horario-personal', 'estudiantes-curso', 'actualizar-datos', 'asistencia', 'informes-asistencia', 'alertas-asistencia', 'calificaciones'], true))
         <link href="{{ asset('css/distributivo-personal.css') }}" rel="stylesheet">
+    @endif
+    @if (in_array($dashboardSection ?? null, ['asistencia', 'informes-asistencia', 'alertas-asistencia', 'calificaciones'], true))
+        <link href="{{ asset('css/asistencia.css') }}" rel="stylesheet">
     @endif
     <style>
         /* ============================================================
@@ -705,7 +708,7 @@
         }
 
         @media (max-width: 640px) {
-            .app-shell { grid-template-columns: 1fr; }
+            .app-shell { grid-template-columns: minmax(0, 1fr); }
             .sidebar    { display: none; }
             .main       { padding: var(--sp-base, 16px); }
             .kpi-row    { grid-template-columns: 1fr; }
@@ -838,9 +841,25 @@
                                href="{{ route('docente.asistencia.index') }}" @if(request()->routeIs('docente.asistencia.*')) aria-current="page" @endif>
                                 <span>Registro de asistencia</span>
                             </a>
+                            <a class="nav-item {{ request()->routeIs('docente.informes-asistencia.*') ? 'active' : '' }}"
+                               href="{{ route('docente.informes-asistencia.index') }}" @if(request()->routeIs('docente.informes-asistencia.*')) aria-current="page" @endif>
+                                <span>Informes de asistencia</span>
+                            </a>
+                            <a class="nav-item {{ request()->routeIs('docente.calificaciones.*') ? 'active' : '' }}"
+                               href="{{ route('docente.calificaciones.index') }}" @if(request()->routeIs('docente.calificaciones.*')) aria-current="page" @endif>
+                                <span>Registro de calificaciones</span>
+                            </a>
                             <a class="nav-item {{ request()->routeIs('docente.estudiantes.*') ? 'active' : '' }}"
                                href="{{ route('docente.estudiantes.index') }}" @if(request()->routeIs('docente.estudiantes.*')) aria-current="page" @endif>
                                 <span>Estudiantes por curso</span>
+                            </a>
+                        @endif
+                        @if ($roleKey === 'padre-tutor')
+                            <a class="nav-item {{ request()->routeIs('padre-tutor.alertas-asistencia.*') ? 'active' : '' }}"
+                               href="{{ route('padre-tutor.alertas-asistencia.index') }}" @if(request()->routeIs('padre-tutor.alertas-asistencia.*')) aria-current="page" @endif>
+                                <span>Alertas de asistencia</span>
+                                @php($alertasActivas = \App\Models\AlertaAsistencia::where('representante_id', session('auth_user.id'))->whereNull('resuelta_at')->count())
+                                @if($alertasActivas)<small aria-label="{{ $alertasActivas }} {{ $alertasActivas === 1 ? 'alerta activa' : 'alertas activas' }}">{{ $alertasActivas }}</small>@endif
                             </a>
                         @endif
                         @if ($roleKey === 'directivo')
@@ -906,7 +925,13 @@
         <main class="main">
 
             @if (($dashboardSection ?? null) === 'asistencia')
-                @include('docente.asistencia')
+                @include(($asistenciaVista ?? null) === 'listado' ? 'docente.asistencia-listado' : 'docente.asistencia')
+            @elseif (($dashboardSection ?? null) === 'calificaciones')
+                @include('docente.calificaciones')
+            @elseif (($dashboardSection ?? null) === 'informes-asistencia')
+                @include('docente.informes-asistencia')
+            @elseif (($dashboardSection ?? null) === 'alertas-asistencia')
+                @include('padre-tutor.alertas-asistencia')
             @elseif (($dashboardSection ?? null) === 'actualizar-datos')
                 @include('docente.actualizar-datos')
             @elseif (($dashboardSection ?? null) === 'estudiantes-curso')

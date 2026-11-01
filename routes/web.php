@@ -1950,7 +1950,27 @@ Route::prefix('/dashboard/docente/actualizar-datos')->middleware('role.session:d
 Route::get('/dashboard/docente/distributivo-personal/{asignacion}/estudiantes/pdf', \App\Http\Controllers\Docente\ListadoEstudiantesPdfController::class)
     ->middleware('role.session:docente')->whereNumber('asignacion')->name('docente.distributivo.estudiantes.pdf');
 
+Route::get('/dashboard/padre-tutor/alertas-asistencia', [\App\Http\Controllers\PadreTutor\AlertaAsistenciaController::class, 'index'])
+    ->middleware('role.session:padre-tutor')->name('padre-tutor.alertas-asistencia.index');
+
+Route::get('/dashboard/padre-tutor/alertas-asistencia/{alerta}/boleta', [\App\Http\Controllers\PadreTutor\AlertaAsistenciaController::class, 'boleta'])
+    ->middleware('role.session:padre-tutor')->whereNumber('alerta')->name('padre-tutor.alertas-asistencia.boleta');
+
+Route::get('/dashboard/docente/informes-asistencia', [\App\Http\Controllers\Docente\InformeAsistenciaController::class, 'index'])
+    ->middleware('role.session:docente')->name('docente.informes-asistencia.index');
+
+Route::get('/dashboard/docente/informes-asistencia/alertas/{matricula}/boleta', [\App\Http\Controllers\Docente\InformeAsistenciaController::class, 'boleta'])
+    ->middleware('role.session:docente')->whereNumber('matricula')->name('docente.informes-asistencia.boleta');
+
+Route::prefix('/dashboard/docente/calificaciones')->middleware('role.session:docente')->name('docente.calificaciones.')->group(function () {
+    Route::get('/', [\App\Http\Controllers\Docente\CalificacionController::class, 'index'])->name('index');
+    Route::get('/pdf', [\App\Http\Controllers\Docente\CalificacionController::class, 'pdf'])->name('pdf');
+    Route::put('/', [\App\Http\Controllers\Docente\CalificacionController::class, 'update'])->name('update');
+});
+
 Route::prefix('/dashboard/docente/asistencia')->middleware('role.session:docente')->name('docente.asistencia.')->group(function () {
     Route::get('/', [\App\Http\Controllers\Docente\AsistenciaController::class, 'index'])->name('index');
+    Route::get('/registrar', [\App\Http\Controllers\Docente\AsistenciaController::class, 'create'])->name('registro');
+    Route::get('/reporte/{agrupacion}', [\App\Http\Controllers\Docente\AsistenciaController::class, 'reporte'])->where('agrupacion', 'cursos|semanas')->name('reporte');
     Route::put('/', [\App\Http\Controllers\Docente\AsistenciaController::class, 'update'])->name('update');
 });
